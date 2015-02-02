@@ -1,0 +1,47 @@
+// config.w32 for ffmpeg
+
+ARG_ENABLE("ffmpeg", "whether to enable ffmpeg", "no");
+
+if (PHP_FFMPEG != "no") {
+	if (
+			// put the libs in win64build\lib and win32build\lib
+			CHECK_LIB("avcodec-52.lib", "ffmpeg", PHP_FFMPEG) &&
+			CHECK_LIB("avdevice-52.lib", "ffmpeg", PHP_FFMPEG) &&
+			CHECK_LIB("avformat-52.lib", "ffmpeg", PHP_FFMPEG) &&
+			CHECK_LIB("avutil-50.lib", "ffmpeg", PHP_FFMPEG) &&
+//			CHECK_LIB("avfilter-1.lib", "ffmpeg", PHP_FFMPEG) &&														// ffmpeg 0.7
+			CHECK_LIB("swscale-0.lib", "ffmpeg", PHP_FFMPEG) &&
+			CHECK_HEADER_ADD_INCLUDE("inttypes.h", "CFLAGS_FFMPEG", PHP_FFMPEG + ";ext\\ffmpeg\\msvc") &&
+			CHECK_HEADER_ADD_INCLUDE("stdint.h", "CFLAGS_FFMPEG", PHP_FFMPEG + ";ext\\ffmpeg\\msvc") &&
+			CHECK_HEADER_ADD_INCLUDE("avcodec.h", "CFLAGS_FFMPEG", PHP_FFMPEG + ";ext\\ffmpeg\\libavcodec") &&
+			CHECK_HEADER_ADD_INCLUDE("avdevice.h", "CFLAGS_FFMPEG", PHP_FFMPEG + ";ext\\ffmpeg\\libavdevice") &&
+			CHECK_HEADER_ADD_INCLUDE("avformat.h", "CFLAGS_FFMPEG", PHP_FFMPEG + ";ext\\ffmpeg\\libavformat") &&
+			CHECK_HEADER_ADD_INCLUDE("avutil.h", "CFLAGS_FFMPEG", PHP_FFMPEG + ";ext\\ffmpeg\\libavutil") &&
+//			CHECK_HEADER_ADD_INCLUDE("avfilter.h", "CFLAGS_FFMPEG", PHP_FFMPEG + ";ext\\ffmpeg\\libavfilter") &&		// ffmpeg 0.7
+			CHECK_HEADER_ADD_INCLUDE("swscale.h", "CFLAGS_FFMPEG", PHP_FFMPEG + ";ext\\ffmpeg\\libswscale")
+		) {
+		EXTENSION('ffmpeg', 'ffmpeg-php.c ffmpeg_errorhandler.c ffmpeg_frame.c ffmpeg_movie.c ffmpeg_tools.c',
+		null,
+		"/I\"" +
+		configure_module_dirname + "/libavcodec\"" +
+		configure_module_dirname + "/libavdevice\"" +
+		configure_module_dirname + "/libavformat\"" +
+		configure_module_dirname + "/libavutil\"" +
+//		configure_module_dirname + "/libavfilter\"" +																	// ffmpeg 0.7
+		configure_module_dirname + "/libswscale\""
+		);
+		PHP_INSTALL_HEADERS("", "ext/ffmpeg ext/ffmpeg/libavcodec ext/ffmpeg/libavdevice ext/ffmpeg/libavformat ext/ffmpeg/libavutil ext/ffmpeg/libswscale ext/ffmpeg/msvc" );
+// 0.7	PHP_INSTALL_HEADERS("", "ext/ffmpeg ext/ffmpeg/libavcodec ext/ffmpeg/libavdevice ext/ffmpeg/libavformat ext/ffmpeg/libavutil ext/ffmpeg/libavfilter ext/ffmpeg/libswscale ext/ffmpeg/msvc" );
+		ADD_FLAG("CFLAGS_FFMPEG", " \
+		/D HAVE_LIBGD20=1 \
+		/D HAVE_SWSCALER=1 \
+		/D HAVE_FFMPEG_PHP=1 \
+		");
+
+		if (PHP_DEBUG != "no") {
+			ADD_FLAG("CFLAGS_FFMPEG", "/W3");
+		}
+	} else {
+		WARNING("ffmpeg not enabled; libraries or headers not found");
+	}	
+}
