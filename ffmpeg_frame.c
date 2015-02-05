@@ -59,10 +59,17 @@
 #if HAVE_LIBGD20
 #include "gd.h" 
 
+#if PHP_VERSION_ID >= 70000
+#define FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, ret) { \
+	ZEND_GET_RESOURCE_TYPE_ID(le_gd, "gd"); \
+	gd_img = (gdImagePtr *)zend_fetch_resource(ret, -1, "Image", le_gd); \
+}
+#else
 #define FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, ret) { \
 	ZEND_GET_RESOURCE_TYPE_ID(le_gd, "gd"); \
 	ZEND_FETCH_RESOURCE(gd_img, gdImagePtr, ret, -1, "Image", le_gd); \
 }
+#endif
 
 #if PIX_FMT_RGBA32
 #define FFMPEG_PHP_FFMPEG_RGB_PIX_FORMAT PIX_FMT_RGBA32
@@ -167,7 +174,11 @@ static void _php_free_av_frame(AVFrame *av_frame)
 
 /* {{{ _php_free_ffmpeg_frame()
 */
+#if PHP_VERSION_ID >= 70000
+static void _php_free_ffmpeg_frame(zend_resource *rsrc TSRMLS_DC)
+#else
 static void _php_free_ffmpeg_frame(zend_rsrc_list_entry *rsrc TSRMLS_DC)
+#endif
 {
 	ff_frame_context *ff_frame = (ff_frame_context*)rsrc->ptr;    
 	_php_free_av_frame(ff_frame->av_frame);
@@ -267,7 +278,11 @@ static int _php_get_gd_image(int w, int h)
 	FREE_ZVAL(width); 
 	FREE_ZVAL(height); 
 
+#if PHP_VERSION_ID >= 70000
+	if (!retval || Z_TYPE_P(retval) != IS_RESOURCE) {
+#else
 	if (!retval || retval->type != IS_RESOURCE) {
+#endif
 	    php_error_docref(NULL TSRMLS_CC, E_ERROR,
 	            "Error creating GD Image");
 	}
@@ -344,7 +359,9 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, toGDImage)
 	return_value->value.lval = _php_get_gd_image(ff_frame->width, 
 	        ff_frame->height);
 
+#if PHP_VERSION_ID < 70000
 	return_value->type = IS_RESOURCE;
+#endif
 
 	FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, &return_value);
 

@@ -68,7 +68,7 @@
         RETURN_FALSE;\
     }\
 \
-    ff_movie_ctx = (ff_movie_context *)ZEND_FETCH_RESOURCE2(Z_RES_P(_tmp_zval), -1,\
+    ff_movie_ctx = (ff_movie_context *)zend_fetch_resource2(Z_RES_P(_tmp_zval), -1,\
             "ffmpeg_movie", le_ffmpeg_movie, le_ffmpeg_pmovie);\
 }\
 
@@ -390,13 +390,22 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
                 RETURN_FALSE;
             }
 
+#if PHP_VERSION_ID < 70000
             Z_TYPE(new_le) = le_ffmpeg_pmovie;
+#endif
             new_le.ptr = ffmovie_ctx;
 
+#if PHP_VERSION_ID >= 70000
+            if (FAILURE == zend_hash_update(&EG(persistent_list), hashkey, 
+                        hashkey_length+1, (void *)&new_le, sizeof(zend_resource),
+                        NULL))
+#else
             if (FAILURE == zend_hash_update(&EG(persistent_list), hashkey, 
                         hashkey_length+1, (void *)&new_le, sizeof(zend_rsrc_list_entry),
-                        NULL)) {
-                php_error_docref(NULL TSRMLS_CC, E_WARNING, 
+                        NULL))
+#endif
+			{
+						php_error_docref(NULL TSRMLS_CC, E_WARNING, 
                         "Failed to register persistent resource");
             }
             
@@ -437,7 +446,11 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
 
 /* {{{ _php_free_ffmpeg_movie
  */
+#if PHP_VERSION_ID >= 70000
+static void _php_free_ffmpeg_movie(zend_resource *rsrc TSRMLS_DC)
+#else
 static void _php_free_ffmpeg_movie(zend_rsrc_list_entry *rsrc TSRMLS_DC)
+#endif
 {
     int i;
     ff_movie_context *ffmovie_ctx = (ff_movie_context*)rsrc->ptr;    
@@ -460,7 +473,11 @@ static void _php_free_ffmpeg_movie(zend_rsrc_list_entry *rsrc TSRMLS_DC)
 
 /* {{{ _php_free_ffmpeg_pmovie
  */
+#if PHP_VERSION_ID >= 70000
+static void _php_free_ffmpeg_pmovie(zend_resource *rsrc TSRMLS_DC)
+#else
 static void _php_free_ffmpeg_pmovie(zend_rsrc_list_entry *rsrc TSRMLS_DC)
+#endif
 {
     /* TODO: Factor into a single free function for pmovie and movie */
     int i;

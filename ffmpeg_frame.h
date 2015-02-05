@@ -82,7 +82,7 @@ int _php_convert_frame(ff_frame_context *ff_frame, int new_fmt);
         RETURN_FALSE;\
     }\
 \
-    ffmpeg_frame = (ff_frame_context *)ZEND_FETCH_RESOURCE(Z_RES_P(_tmp_zval), -1,\
+    ffmpeg_frame = (ff_frame_context *)zend_fetch_resource(Z_RES_P(_tmp_zval), -1,\
             "ffmpeg_frame", le_ffmpeg_frame);\
 }\
 
