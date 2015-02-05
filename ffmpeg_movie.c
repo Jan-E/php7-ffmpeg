@@ -59,6 +59,20 @@
 #include "ffmpeg_movie.h"
 #include "ffmpeg_tools.h"
    
+#if PHP_VERSION_ID >= 70000
+#define GET_MOVIE_RESOURCE(ff_movie_ctx) {\
+    zval *_tmp_zval;\
+    if (zend_hash_find(Z_OBJPROP_P(getThis()), "ffmpeg_movie",\
+                sizeof("ffmpeg_movie"), (void **)&_tmp_zval) == FAILURE) {\
+        zend_error(E_WARNING, "Invalid ffmpeg_movie object");\
+        RETURN_FALSE;\
+    }\
+\
+    ff_movie_ctx = (ff_movie_context *)ZEND_FETCH_RESOURCE2(Z_RES_P(_tmp_zval), -1,\
+            "ffmpeg_movie", le_ffmpeg_movie, le_ffmpeg_pmovie);\
+}\
+
+#else
 #define GET_MOVIE_RESOURCE(ff_movie_ctx) {\
     zval **_tmp_zval;\
     if (zend_hash_find(Z_OBJPROP_P(getThis()), "ffmpeg_movie",\
@@ -71,6 +85,7 @@
             "ffmpeg_movie", le_ffmpeg_movie, le_ffmpeg_pmovie);\
 }\
 
+#endif
 #define LRINT(x) ((long) ((x)+0.5))
 
 #if LIBAVFORMAT_BUILD > 4628
@@ -322,7 +337,11 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
     } 
 
     if (persistent) {
-        zend_rsrc_list_entry *le;
+#if PHP_VERSION_ID >= 70000
+	zend_resource *le;
+#else
+	zend_rsrc_list_entry *le;
+#endif
         /* resolve the fully-qualified path name to use as the hash key */
         fullpath = expand_filepath(filename, NULL TSRMLS_CC);
 
@@ -357,7 +376,11 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
             }
             
         } else { /* no existing persistant movie, create one */
+#if PHP_VERSION_ID >= 70000
+			zend_resource new_le;
+#else
             zend_rsrc_list_entry new_le;
+#endif
             ffmovie_ctx = _php_alloc_ffmovie_ctx(1);
 
             if (_php_open_movie_file(ffmovie_ctx, filename)) {
