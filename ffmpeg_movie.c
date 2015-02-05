@@ -319,106 +319,116 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
         case 2:
             convert_to_boolean_ex(argv[1]);
 
-            if (! INI_BOOL("ffmpeg.allow_persistent") && Z_LVAL_PP(argv[1])) {
+            if (! INI_BOOL("ffmpeg.allow_persistent") && argv[1]) {
                 zend_error(E_WARNING, 
                         "Persistent movies have been disabled in php.ini");
                 break;
             } 
 
-            persistent = Z_LVAL_PP(argv[1]);
+            persistent = argv[1];
 
             /* fallthru */
         case 1:
             convert_to_string_ex(argv[0]);
-            filename = Z_STRVAL_PP(argv[0]);
+            filename = argv[0];
             break;
         default:
             WRONG_PARAM_COUNT;
     } 
 
-    if (persistent) {
-#if PHP_VERSION_ID >= 70000
-	zend_resource *le;
-#else
-	zend_rsrc_list_entry *le;
-#endif
-        /* resolve the fully-qualified path name to use as the hash key */
-        fullpath = expand_filepath(filename, NULL TSRMLS_CC);
-
-        hashkey_length = sizeof("ffmpeg-php_")-1 + 
-            strlen(SAFE_STRING(filename));
-        hashkey = (char *) emalloc(hashkey_length+1);
-        snprintf(hashkey, hashkey_length, "ffmpeg-php_%s",
-			SAFE_STRING(filename));
-
-        
-        /* do we have an existing persistent movie? */
-        if (SUCCESS == zend_hash_find(&EG(persistent_list), hashkey, 
-                    hashkey_length+1, (void**)&le)) {
-            int type;
-            
-            if (Z_TYPE_P(le) != le_ffmpeg_pmovie) {
-                php_error_docref(NULL TSRMLS_CC, E_ERROR, 
-                        "Failed to retrieve persistent resource");
-            }
-            ffmovie_ctx = (ff_movie_context*)le->ptr;
-           
-            /* sanity check to ensure that the resource is still a valid 
-             * regular resource number */
-            if (zend_list_find(ffmovie_ctx->rsrc_id, &type) == ffmovie_ctx) {
-                /* add a reference to the persistent movie */
-                zend_list_addref(ffmovie_ctx->rsrc_id);
-            } else {
-                //php_error_docref(NULL TSRMLS_CC, E_ERROR, 
-                //"Not a valid persistent movie resource");
-                ffmovie_ctx->rsrc_id = ZEND_REGISTER_RESOURCE(NULL, 
-                        ffmovie_ctx, le_ffmpeg_pmovie);
-            }
-            
-        } else { /* no existing persistant movie, create one */
-#if PHP_VERSION_ID >= 70000
-			zend_resource new_le;
-#else
-            zend_rsrc_list_entry new_le;
-#endif
-            ffmovie_ctx = _php_alloc_ffmovie_ctx(1);
-
-            if (_php_open_movie_file(ffmovie_ctx, filename)) {
-                zend_error(E_WARNING, "Can't open movie file %s", filename);
-                efree(argv);
-                ZVAL_BOOL(getThis(), 0);
-                RETURN_FALSE;
-            }
-
-#if PHP_VERSION_ID < 70000
-            Z_TYPE(new_le) = le_ffmpeg_pmovie;
-#endif
-            new_le.ptr = ffmovie_ctx;
-
-#if PHP_VERSION_ID >= 70000
-            if (FAILURE == zend_hash_update(&EG(persistent_list), hashkey, 
-                        hashkey_length+1, (void *)&new_le, sizeof(zend_resource),
-                        NULL))
-#else
-            if (FAILURE == zend_hash_update(&EG(persistent_list), hashkey, 
-                        hashkey_length+1, (void *)&new_le, sizeof(zend_rsrc_list_entry),
-                        NULL))
-#endif
-			{
-						php_error_docref(NULL TSRMLS_CC, E_WARNING, 
-                        "Failed to register persistent resource");
-            }
-            
-            ffmovie_ctx->rsrc_id = ZEND_REGISTER_RESOURCE(NULL, ffmovie_ctx, 
-                    le_ffmpeg_pmovie);
-        }
-        
-    } else {
+//	    if (persistent) {
+//	#if PHP_VERSION_ID >= 70000
+//		zend_resource *le;
+//	#else
+//		zend_rsrc_list_entry *le;
+//	#endif
+//	        /* resolve the fully-qualified path name to use as the hash key */
+//	        fullpath = expand_filepath(filename, NULL TSRMLS_CC);
+//	
+//	        hashkey_length = sizeof("ffmpeg-php_")-1 + 
+//	            strlen(SAFE_STRING(filename));
+//	        hashkey = (char *) emalloc(hashkey_length+1);
+//	        snprintf(hashkey, hashkey_length, "ffmpeg-php_%s",
+//				SAFE_STRING(filename));
+//	
+//	        
+//	        /* do we have an existing persistent movie? */
+//	        if (SUCCESS == zend_hash_find(&EG(persistent_list), hashkey, 
+//	                    hashkey_length+1, (void**)&le)) {
+//	            int type;
+//	            
+//	            if (Z_TYPE_P(le) != le_ffmpeg_pmovie) {
+//	                php_error_docref(NULL TSRMLS_CC, E_ERROR, 
+//	                        "Failed to retrieve persistent resource");
+//	            }
+//	            ffmovie_ctx = (ff_movie_context *)le->ptr;
+//	           
+//	            /* sanity check to ensure that the resource is still a valid 
+//	             * regular resource number */
+//	            if (zend_list_find(ffmovie_ctx->rsrc_id, &type) == ffmovie_ctx) {
+//	                /* add a reference to the persistent movie */
+//	                zend_list_addref(ffmovie_ctx->rsrc_id);
+//	            } else {
+//	                //php_error_docref(NULL TSRMLS_CC, E_ERROR, 
+//	                //"Not a valid persistent movie resource");
+//	#if PHP_VERSION_ID >= 70000
+//	                ffmovie_ctx->rsrc_id = zend_register_resource( 
+//	                        ffmovie_ctx, le_ffmpeg_pmovie);
+//	#else
+//	                ffmovie_ctx->rsrc_id = ZEND_REGISTER_RESOURCE(NULL, 
+//	                        ffmovie_ctx, le_ffmpeg_pmovie);
+//	#endif
+//	            }
+//	            
+//	        } else { /* no existing persistant movie, create one */
+//	#if PHP_VERSION_ID >= 70000
+//				zend_resource new_le;
+//	#else
+//	            zend_rsrc_list_entry new_le;
+//	#endif
+//	            ffmovie_ctx = _php_alloc_ffmovie_ctx(1);
+//	
+//	            if (_php_open_movie_file(ffmovie_ctx, filename)) {
+//	                zend_error(E_WARNING, "Can't open movie file %s", filename);
+//	                efree(argv);
+//	                ZVAL_BOOL(getThis(), 0);
+//	                RETURN_FALSE;
+//	            }
+//	
+//	#if PHP_VERSION_ID < 70000
+//	            Z_TYPE(new_le) = le_ffmpeg_pmovie;
+//	#endif
+//	            new_le.ptr = ffmovie_ctx;
+//	
+//	#if PHP_VERSION_ID >= 70000
+//	            if (FAILURE == zend_hash_update(&EG(persistent_list), hashkey, 
+//	                        hashkey_length+1, (void *)&new_le, sizeof(zend_resource),
+//	                        NULL))
+//	#else
+//	            if (FAILURE == zend_hash_update(&EG(persistent_list), hashkey, 
+//	                        hashkey_length+1, (void *)&new_le, sizeof(zend_rsrc_list_entry),
+//	                        NULL))
+//	#endif
+//				{
+//							php_error_docref(NULL TSRMLS_CC, E_WARNING, 
+//	                        "Failed to register persistent resource");
+//	            }
+//	            
+//	#if PHP_VERSION_ID >= 70000
+//	            ffmovie_ctx->rsrc_id = zend_register_resource(ffmovie_ctx, 
+//	                    le_ffmpeg_pmovie);
+//	#else
+//	            ffmovie_ctx->rsrc_id = ZEND_REGISTER_RESOURCE(NULL, ffmovie_ctx, 
+//	                    le_ffmpeg_pmovie);
+//	#endif
+//	        }
+//	        
+//	    } else {
         ffmovie_ctx = _php_alloc_ffmovie_ctx(0);
         
-        if (_php_open_movie_file(ffmovie_ctx, Z_STRVAL_PP(argv[0]))) {
+        if (_php_open_movie_file(ffmovie_ctx, argv[0])) {
             zend_error(E_WARNING, "Can't open movie file %s", 
-                    Z_STRVAL_PP(argv[0]));
+                    argv[0]);
             efree(argv);
             ZVAL_BOOL(getThis(), 0);
             RETURN_FALSE;
@@ -426,9 +436,14 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
         
         /* pass NULL for resource result since we're not returning the resource
            directly, but adding it to the returned object. */
+#if PHP_VERSION_ID >= 70000
+        ffmovie_ctx->rsrc_id = zend_register_resource(ffmovie_ctx, 
+                le_ffmpeg_movie);
+#else
         ffmovie_ctx->rsrc_id = ZEND_REGISTER_RESOURCE(NULL, ffmovie_ctx, 
                 le_ffmpeg_movie);
-    }
+#endif
+//	    }
 
     object_init_ex(getThis(), ffmpeg_movie_class_entry_ptr);
     add_property_resource(getThis(), "ffmpeg_movie", ffmovie_ctx->rsrc_id);
@@ -1453,7 +1468,7 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getFrame)
         }
 
         convert_to_long_ex(argv[0]);
-        wanted_frame = Z_LVAL_PP(argv[0]);
+        wanted_frame = argv[0];
 
         /* bounds check wanted frame */
         if (wanted_frame < 1) {
