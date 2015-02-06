@@ -38,7 +38,6 @@
 
 #include "php_version.h"
 
-
 /* 
  * PHP-4 doesn't have the METHOD, ME and MALIAS macros so map them back
  * to the function macros for PHP-4
@@ -83,6 +82,7 @@ PHP_RINIT_FUNCTION(ffmpeg);
 PHP_RSHUTDOWN_FUNCTION(ffmpeg);
 PHP_MINFO_FUNCTION(ffmpeg);
 
+PHP_FUNCTION(ffmpeg_movie_list);
 
 #ifdef ZTS
 #define FFMPEG_G(v) TSRMG(ffmpeg_globals_id, zend_ffmpeg_globals *, v)

@@ -55,12 +55,26 @@
 
 #define FFMPEG_PHP_VERSION "0.7.16"
 
+/* {{{ arginfo */
+ZEND_BEGIN_ARG_INFO(arginfo_ffmpeg_movie_list, 0)
+ZEND_END_ARG_INFO()
+/* }}} */
+
+/* }}} */
+/* {{{ ffmpeg_functions[]
+ */
+const zend_function_entry ffmpeg_functions[] = {
+	PHP_FE(ffmpeg_movie_list, arginfo_ffmpeg_movie_list)
+	PHP_FE_END
+};
+/* }}} */
+
 zend_module_entry ffmpeg_module_entry = {
 #if ZEND_MODULE_API_NO >= 20010901
     STANDARD_MODULE_HEADER,
 #endif
     "ffmpeg",
-    NULL,
+	ffmpeg_functions,
     PHP_MINIT(ffmpeg),
     PHP_MSHUTDOWN(ffmpeg),
     NULL,
@@ -169,8 +183,6 @@ PHP_MINFO_FUNCTION(ffmpeg)
 
     DISPLAY_INI_ENTRIES();
 }
-/* }}} */
-
 
 /*
  * Local variables:

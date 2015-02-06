@@ -60,20 +60,12 @@
 #include "ffmpeg_tools.h"
    
 #if PHP_VERSION_ID >= 70000
-#define GET_MOVIE_RESOURCE(ff_movie_ctx) {\
-    zval *_tmp_zval;\
-    if (zend_hash_find(Z_OBJPROP_P(getThis()), "ffmpeg_movie",\
-                sizeof("ffmpeg_movie"), (void **)&_tmp_zval) == FAILURE) {\
-        zend_error(E_WARNING, "Invalid ffmpeg_movie object");\
-        RETURN_FALSE;\
-    }\
-\
-    ff_movie_ctx = (ff_movie_context *)zend_fetch_resource2(_tmp_zval,\
-            "ffmpeg_movie", le_ffmpeg_movie, le_ffmpeg_pmovie);\
+#define GET_MOVIE_RESOURCE(ffmovie_ctx) {\
+	ffmovie_ctx = _php_get_ffmovie_ctx(ffmovie_ctx);\
 }\
-
+	
 #else
-#define GET_MOVIE_RESOURCE(ff_movie_ctx) {\
+#define GET_MOVIE_RESOURCE(ffmovie_ctx) {\
     zval **_tmp_zval;\
     if (zend_hash_find(Z_OBJPROP_P(getThis()), "ffmpeg_movie",\
                 sizeof("ffmpeg_movie"), (void **)&_tmp_zval) == FAILURE) {\
@@ -155,6 +147,28 @@ zend_function_entry ffmpeg_movie_class_methods[] = {
 };
 /* }}} */
 
+/* {{{ _php_get_ffmovie_ctx(int rsrc_id)
+ */
+static ff_movie_context* _php_get_ffmovie_ctx(ff_movie_context *this_ffmovie_ctx)
+{
+	zend_ulong numitems, i;
+	zend_resource *le;
+    ff_movie_context *ffmovie_ctx;
+	
+	numitems = zend_hash_next_free_element(&EG(regular_list));
+	for (i=1; i<numitems; i++) {
+		if ((le = zend_hash_index_find_ptr(&EG(regular_list), i)) == NULL) {
+			continue;
+		}
+		fprintf(stderr, "_php_get_ffmovie_ctx ffmovie_ctx->rsrc_id = %d, this_ffmovie_ctx->rsrc_id = %d, le->ptr = %d\n", ffmovie_ctx->rsrc_id, this_ffmovie_ctx->rsrc_id, le->ptr);
+		if (le->type == le_ffmpeg_movie || le->type == le_ffmpeg_pmovie) {
+			ffmovie_ctx = (ff_movie_context *)(le->ptr);
+			return ffmovie_ctx;
+		}
+	}
+	return 0;
+}
+/* }}} */
 
 /* {{{ _php_get_stream_index()
  */
@@ -301,6 +315,7 @@ static int _php_open_movie_file(ff_movie_context *ffmovie_ctx,
  */
 FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
 {
+	zend_resource *movie, new_movie;
 	zval *argv = NULL;
 	int ac = ZEND_NUM_ARGS();
     int persistent = 0, hashkey_length = 0;
@@ -475,9 +490,8 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
         }
         
 #if PHP_VERSION_ID >= 70000
-		ZVAL_RES(return_value, zend_register_resource(ffmovie_ctx, 
-                le_ffmpeg_movie));
-        ffmovie_ctx->rsrc_id = Z_RES_P(return_value);
+		ffmovie_ctx->rsrc_id = zend_register_resource(ffmovie_ctx, 
+                le_ffmpeg_movie);
 #else
         /* pass NULL for resource result since we're not returning the resource
            directly, but adding it to the returned object. */
@@ -499,7 +513,6 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
     }
 }
 /* }}} */
-
 
 /* {{{ _php_free_ffmpeg_movie
  */
@@ -1590,6 +1603,33 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getPixelAspectRatio)
 }
 /* }}} */
 
+
+/* {{{ proto array ffmpeg_movie_list()
+   List opened ffmpeg_movies */
+PHP_FUNCTION(ffmpeg_movie_list)
+{
+	zend_ulong numitems, i;
+	zend_resource *le;
+    ff_movie_context *ffmovie_ctx;
+	
+	if (zend_parse_parameters_none() == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	array_init(return_value);
+
+	numitems = zend_hash_next_free_element(&EG(regular_list));
+	for (i=1; i<numitems; i++) {
+		if ((le = zend_hash_index_find_ptr(&EG(regular_list), i)) == NULL) {
+			continue;
+		}
+		if (le->type == le_ffmpeg_movie || le->type == le_ffmpeg_pmovie) {
+			ffmovie_ctx = (ff_movie_context *)(le->ptr);
+			add_index_string(return_value, i, le->ptr);
+		}
+	}
+}
+/* }}} */
 
 /*
  * Local variables:
