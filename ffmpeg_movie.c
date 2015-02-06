@@ -68,7 +68,7 @@
         RETURN_FALSE;\
     }\
 \
-    ff_movie_ctx = (ff_movie_context *)zend_fetch_resource2(Z_RES_P(_tmp_zval), -1,\
+    ff_movie_ctx = (ff_movie_context *)zend_fetch_resource2(_tmp_zval,\
             "ffmpeg_movie", le_ffmpeg_movie, le_ffmpeg_pmovie);\
 }\
 
@@ -301,36 +301,76 @@ static int _php_open_movie_file(ff_movie_context *ffmovie_ctx,
  */
 FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
 {
+	zval *argv = NULL;
+	int ac = ZEND_NUM_ARGS();
     int persistent = 0, hashkey_length = 0;
     char *filename = NULL, *fullpath = NULL, *hashkey = NULL;
-    zval ***argv;
     ff_movie_context *ffmovie_ctx = NULL;
+	char *key = NULL, *error = NULL;
+	int keylen = 0;
+	int i;
 
-    /* retrieve arguments */ 
-    argv = (zval ***) safe_emalloc(sizeof(zval **), ZEND_NUM_ARGS(), 0);
+	/* we pass additional args to the respective handler */
+	argv = safe_emalloc(ac, sizeof(zval), 0);
+	if (zend_get_parameters_array_ex(ac, argv) != SUCCESS) {
+		efree(argv);
+		WRONG_PARAM_COUNT;
+	}
 
-    if (zend_get_parameters_array_ex(ZEND_NUM_ARGS(), argv) != SUCCESS) {
-        efree(argv);
-        php_error_docref(NULL TSRMLS_CC, E_ERROR,
-                "Error parsing arguments");
-    }
+	/* we only take string arguments */
+	for (i = 0; i < ac; i++) {
+		if (Z_TYPE(argv[i]) != IS_STRING) {
+			convert_to_string_ex(&argv[i]);
+		} else if (Z_REFCOUNTED(argv[i])) {
+			Z_ADDREF(argv[i]);
+		}
+		keylen += Z_STRLEN(argv[i]);
+	}
+
+//	if (persistent) {
+//		zend_resource *le;
+//
+//		/* calculate hash */
+//		key = safe_emalloc(keylen, 1, 1);
+//		key[keylen] = '\0';
+//		keylen = 0;
+//
+//		for(i = 0; i < ac; i++) {
+//			memcpy(key+keylen, Z_STRVAL(argv[i]), Z_STRLEN(argv[i]));
+//			keylen += Z_STRLEN(argv[i]);
+//		}
+//
+//		/* try to find if we already have this link in our persistent list */
+//		if ((le = zend_hash_str_find_ptr(&EG(persistent_list), key, keylen)) != NULL) {
+//			FREENOW;
+//
+//			if (le->type != le_pdb) {
+//				RETURN_FALSE;
+//			}
+//
+//			info = (dba_info *)le->ptr;
+//
+//			GC_REFCOUNT(le)++;
+//			RETURN_RES(le);
+//			return;
+//		}
+//	}
 
     switch (ZEND_NUM_ARGS()) {
         case 2:
-            convert_to_boolean_ex(argv[1]);
+//			convert_to_boolean_ex(argv[1]);
 
-            if (! INI_BOOL("ffmpeg.allow_persistent") && argv[1]) {
+            if (! INI_BOOL("ffmpeg.allow_persistent") && Z_STRVAL(argv[1])) {
                 zend_error(E_WARNING, 
                         "Persistent movies have been disabled in php.ini");
                 break;
             } 
 
-            persistent = argv[1];
+            persistent = Z_STRVAL(argv[1]);
 
             /* fallthru */
         case 1:
-            convert_to_string_ex(argv[0]);
-            filename = argv[0];
+            filename = Z_STRVAL(argv[0]);
             break;
         default:
             WRONG_PARAM_COUNT;
@@ -426,24 +466,26 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
 //	    } else {
         ffmovie_ctx = _php_alloc_ffmovie_ctx(0);
         
-        if (_php_open_movie_file(ffmovie_ctx, argv[0])) {
+        if (_php_open_movie_file(ffmovie_ctx, filename)) {
             zend_error(E_WARNING, "Can't open movie file %s", 
-                    argv[0]);
+                    filename);
             efree(argv);
             ZVAL_BOOL(getThis(), 0);
             RETURN_FALSE;
         }
         
+#if PHP_VERSION_ID >= 70000
+		ZVAL_RES(return_value, zend_register_resource(ffmovie_ctx, 
+                le_ffmpeg_movie));
+        ffmovie_ctx->rsrc_id = Z_RES_P(return_value);
+#else
         /* pass NULL for resource result since we're not returning the resource
            directly, but adding it to the returned object. */
-#if PHP_VERSION_ID >= 70000
-        ffmovie_ctx->rsrc_id = zend_register_resource(ffmovie_ctx, 
-                le_ffmpeg_movie);
-#else
         ffmovie_ctx->rsrc_id = ZEND_REGISTER_RESOURCE(NULL, ffmovie_ctx, 
                 le_ffmpeg_movie);
 #endif
 //	    }
+	fprintf(stderr, "ffmovie_ctx = %x, ffmovie_ctx->rsrc_id = %d, filename = %s\n", ffmovie_ctx, ffmovie_ctx->rsrc_id, filename);
 
     object_init_ex(getThis(), ffmpeg_movie_class_entry_ptr);
     add_property_resource(getThis(), "ffmpeg_movie", ffmovie_ctx->rsrc_id);
@@ -1449,10 +1491,11 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getNextKeyFrame)
  */
 FFMPEG_PHP_METHOD(ffmpeg_movie, getFrame)
 {
-    zval **argv[1];
+	zval *argv[1];
     int wanted_frame = 0; 
     ff_movie_context *ffmovie_ctx;
-
+	int ac = ZEND_NUM_ARGS();
+ 
     if (ZEND_NUM_ARGS() > 1) {
         WRONG_PARAM_COUNT;
     }
@@ -1460,14 +1503,13 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getFrame)
     GET_MOVIE_RESOURCE(ffmovie_ctx);
 
     if (ZEND_NUM_ARGS()) {
-
         /* retrieve arguments */ 
-        if (zend_get_parameters_array_ex(ZEND_NUM_ARGS(), argv) != SUCCESS) {
-            php_error_docref(NULL TSRMLS_CC, E_ERROR,
-                    "Error parsing arguments");
-        }
+		if (zend_get_parameters_array_ex(ac, argv) != SUCCESS) {
+			efree(argv);
+			WRONG_PARAM_COUNT;
+		}
 
-        convert_to_long_ex(argv[0]);
+		convert_to_long_ex(&argv[0]);
         wanted_frame = argv[0];
 
         /* bounds check wanted frame */

@@ -84,7 +84,7 @@ int _zend_list_addref(int id TSRMLS_DC)
 #if PHP_VERSION_ID >= 70000
 #define FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, ret) { \
 	ZEND_GET_RESOURCE_TYPE_ID(le_gd, "gd"); \
-	gd_img = (gdImagePtr *)zend_fetch_resource(ret, -1, "Image", le_gd); \
+	gd_img = (gdImagePtr *)zend_fetch_resource(ret, "Image", le_gd); \
 }
 #else
 #define FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, ret) { \
