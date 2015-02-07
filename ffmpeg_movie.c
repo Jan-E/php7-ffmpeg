@@ -61,9 +61,8 @@
    
 #if PHP_VERSION_ID >= 70000
 #define GET_MOVIE_RESOURCE(ffmovie_ctx) {\
-	ffmovie_ctx = _php_get_ffmovie_ctx(ffmovie_ctx);\
-}\
-	
+	ffmovie_ctx = _php_get_ffmovie_ctx();\
+}	
 #else
 #define GET_MOVIE_RESOURCE(ffmovie_ctx) {\
     zval **_tmp_zval;\
@@ -75,8 +74,7 @@
 \
     ZEND_FETCH_RESOURCE2(ff_movie_ctx, ff_movie_context*, _tmp_zval, -1,\
             "ffmpeg_movie", le_ffmpeg_movie, le_ffmpeg_pmovie);\
-}\
-
+}
 #endif
 #define LRINT(x) ((long) ((x)+0.5))
 
@@ -147,9 +145,9 @@ zend_function_entry ffmpeg_movie_class_methods[] = {
 };
 /* }}} */
 
-/* {{{ _php_get_ffmovie_ctx(int rsrc_id)
+/* {{{ _php_get_ffmovie_ctx()
  */
-static ff_movie_context* _php_get_ffmovie_ctx(ff_movie_context *this_ffmovie_ctx)
+static ff_movie_context* _php_get_ffmovie_ctx()
 {
 	zend_ulong numitems, i;
 	zend_resource *le;
@@ -160,9 +158,9 @@ static ff_movie_context* _php_get_ffmovie_ctx(ff_movie_context *this_ffmovie_ctx
 		if ((le = zend_hash_index_find_ptr(&EG(regular_list), i)) == NULL) {
 			continue;
 		}
-		fprintf(stderr, "_php_get_ffmovie_ctx ffmovie_ctx->rsrc_id = %d, this_ffmovie_ctx->rsrc_id = %d, le->ptr = %d\n", ffmovie_ctx->rsrc_id, this_ffmovie_ctx->rsrc_id, le->ptr);
 		if (le->type == le_ffmpeg_movie || le->type == le_ffmpeg_pmovie) {
 			ffmovie_ctx = (ff_movie_context *)(le->ptr);
+			fprintf(stderr, "_php_get_ffmovie_ctx ffmovie_ctx->rsrc_id = %d, le->ptr = %d\n", ffmovie_ctx->rsrc_id, le->ptr);
 			return ffmovie_ctx;
 		}
 	}
@@ -315,7 +313,6 @@ static int _php_open_movie_file(ff_movie_context *ffmovie_ctx,
  */
 FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
 {
-	zend_resource *movie, new_movie;
 	zval *argv = NULL;
 	int ac = ZEND_NUM_ARGS();
     int persistent = 0, hashkey_length = 0;
@@ -653,7 +650,7 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getComment)
     GET_MOVIE_RESOURCE(ffmovie_ctx);
     
     RETURN_STRINGL(ffmovie_ctx->fmt_ctx->comment,
-            strlen(ffmovie_ctx->fmt_ctx->comment), 1);
+            strlen(ffmovie_ctx->fmt_ctx->comment));
 }
 /* }}} */
 
@@ -668,7 +665,7 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getTitle)
     GET_MOVIE_RESOURCE(ffmovie_ctx);
 
     RETURN_STRINGL(ffmovie_ctx->fmt_ctx->title,
-            strlen(ffmovie_ctx->fmt_ctx->title), 1);
+            strlen(ffmovie_ctx->fmt_ctx->title));
 }
 /* }}} */
 
@@ -683,7 +680,7 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getAuthor)
     GET_MOVIE_RESOURCE(ffmovie_ctx);
 
     RETURN_STRINGL(ffmovie_ctx->fmt_ctx->author,
-            strlen(ffmovie_ctx->fmt_ctx->author), 1);
+            strlen(ffmovie_ctx->fmt_ctx->author));
 }
 /* }}} */
 
@@ -697,7 +694,7 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getCopyright)
     GET_MOVIE_RESOURCE(ffmovie_ctx);
 
     RETURN_STRINGL(ffmovie_ctx->fmt_ctx->copyright,
-            strlen(ffmovie_ctx->fmt_ctx->copyright), 1);
+            strlen(ffmovie_ctx->fmt_ctx->copyright));
 }
 /* }}} */
 
@@ -712,7 +709,7 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getAlbum)
     GET_MOVIE_RESOURCE(ffmovie_ctx);
 
     RETURN_STRINGL(ffmovie_ctx->fmt_ctx->album,
-            strlen(ffmovie_ctx->fmt_ctx->album), 1);
+            strlen(ffmovie_ctx->fmt_ctx->album));
 }
 /* }}} */
 
@@ -726,7 +723,7 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getGenre)
     GET_MOVIE_RESOURCE(ffmovie_ctx);
 
     RETURN_STRINGL(ffmovie_ctx->fmt_ctx->genre,
-            strlen(ffmovie_ctx->fmt_ctx->genre), 1);
+            strlen(ffmovie_ctx->fmt_ctx->genre));
 }
 /* }}} */
 
@@ -864,7 +861,7 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getFileName)
     GET_MOVIE_RESOURCE(ffmovie_ctx);
 
     filename = _php_get_filename(ffmovie_ctx);
-    RETURN_STRINGL(filename, strlen(filename), 1);
+    RETURN_STRINGL(filename, strlen(filename));
 }
 /* }}} */
 
@@ -995,7 +992,7 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getPixelFormat)
         /* cast const to non-const to keep compiler from complaining, 
            RETURN_STRINGL just copies so the string won't get overwritten
            */
-        RETURN_STRINGL((char *)fmt, strlen(fmt), 1);
+        RETURN_STRINGL((char *)fmt, strlen(fmt));
     } else {
         RETURN_FALSE;
     }
@@ -1113,7 +1110,7 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getVideoCodec)
     codec_name = (char*)_php_get_codec_name(ffmovie_ctx, CODEC_TYPE_VIDEO);
  
     if (codec_name) {
-        RETURN_STRINGL(codec_name, strlen(codec_name), 1);
+        RETURN_STRINGL(codec_name, strlen(codec_name));
     } else {
         RETURN_FALSE;
     }
@@ -1133,7 +1130,7 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getAudioCodec)
     codec_name = (char*)_php_get_codec_name(ffmovie_ctx, CODEC_TYPE_AUDIO);
  
     if (codec_name) {
-        RETURN_STRINGL(codec_name, strlen(codec_name), 1);
+        RETURN_STRINGL(codec_name, strlen(codec_name));
     } else {
         RETURN_FALSE;
     }
@@ -1504,7 +1501,7 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getNextKeyFrame)
  */
 FFMPEG_PHP_METHOD(ffmpeg_movie, getFrame)
 {
-	zval *argv[1];
+	zval *argv;
     int wanted_frame = 0; 
     ff_movie_context *ffmovie_ctx;
 	int ac = ZEND_NUM_ARGS();
@@ -1523,7 +1520,7 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getFrame)
 		}
 
 		convert_to_long_ex(&argv[0]);
-        wanted_frame = argv[0];
+        wanted_frame = Z_LVAL(argv[0]);
 
         /* bounds check wanted frame */
         if (wanted_frame < 1) {
