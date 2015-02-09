@@ -61,8 +61,17 @@
    
 #if PHP_VERSION_ID >= 70000
 #define GET_MOVIE_RESOURCE(ffmovie_ctx) {\
-	ffmovie_ctx = _php_get_ffmovie_ctx();\
-}	
+    zval *_tmp_zval;\
+    _tmp_zval = zend_hash_find(Z_OBJPROP_P(getThis()), "ffmpeg_movie");\
+    if (_tmp_zval) {\
+		ffmovie_ctx = (ff_movie_context *)zend_fetch_resource(Z_RES_P(_tmp_zval),\
+			"ffmpeg_movie", le_ffmpeg_movie);\
+	} else {\
+        zend_error(E_WARNING, "Invalid ffmpeg_movie object");\
+        RETURN_FALSE;\
+    }\
+\
+}
 #else
 #define GET_MOVIE_RESOURCE(ffmovie_ctx) {\
     zval **_tmp_zval;\
@@ -378,7 +387,7 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
                 break;
             } 
 
-            persistent = Z_STRVAL(argv[1]);
+            persistent = Z_LVAL(argv[1]);
 
             /* fallthru */
         case 1:
@@ -487,8 +496,9 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
         }
         
 #if PHP_VERSION_ID >= 70000
-		ffmovie_ctx->rsrc_id = zend_register_resource(ffmovie_ctx, 
-                le_ffmpeg_movie);
+		ZVAL_RES(return_value, zend_register_resource(ffmovie_ctx, 
+                le_ffmpeg_movie));
+		//ffmovie_ctx->rsrc_id = Z_RES_P(return_value);
 #else
         /* pass NULL for resource result since we're not returning the resource
            directly, but adding it to the returned object. */
