@@ -62,7 +62,7 @@
 #if PHP_VERSION_ID >= 70000
 #define GET_MOVIE_RESOURCE(ffmovie_ctx) {\
     zend_resource *le;\
-	if ((le = zend_hash_find_ptr(Z_OBJPROP_P(getThis()), "ffmpeg_movie")) == NULL) {\
+	if ((le = zend_hash_str_find_ptr(Z_OBJPROP_P(getThis()), "ffmpeg_movie", sizeof("ffmpeg_movie")-1)) == NULL) {\
         zend_error(E_WARNING, "Invalid ffmpeg_movie object");\
         RETURN_FALSE;\
 	} else {\
@@ -469,19 +469,6 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
 #if PHP_VERSION_ID >= 70000
         ffmovie_ctx->rsrc_id = zend_register_resource(ffmovie_ctx, 
                 le_ffmpeg_movie);
-        /* resolve the fully-qualified path name to use as the hash key */
-        fullpath = expand_filepath(filename, NULL TSRMLS_CC);
-        hashkey_length = sizeof("ffmpeg-php_")-1 + 
-            strlen(SAFE_STRING(filename));
-        hashkey = (char *) emalloc(hashkey_length+1);
-        snprintf(hashkey, hashkey_length, "ffmpeg-php_%s",
-			SAFE_STRING(filename));
-		/* add it to the hash */
-		new_le.ptr = (void *) Z_RES_P(return_value);
-		new_le.type = le_ffmpeg_movie;
-		if (zend_hash_update_ptr(&EG(regular_list), hashkey, &new_le) == NULL) {
-			RETURN_FALSE;
-		}
 #else
         /* pass NULL for resource result since we're not returning the resource
            directly, but adding it to the returned object. */
@@ -777,14 +764,14 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getDuration)
     ff_movie_context *ffmovie_ctx;  
     zend_resource *le;
 	
+    GET_MOVIE_RESOURCE(ffmovie_ctx);
+//	if ((le = zend_hash_str_find_ptr(Z_OBJPROP_P(getThis()), "ffmpeg_movie", sizeof("ffmpeg_movie")-1)) == NULL) {
+//		zend_error(E_WARNING, "Invalid ffmpeg_movie object");
+//		RETURN_FALSE;
+//	} else {
+//		ffmovie_ctx = (ff_movie_context *)(le->ptr);
+//	}
 	fprintf(stderr, "getDuration return_value = %d, getThis() = %d\n", return_value, getThis());
-	
-	if ((le = zend_hash_str_find_ptr(Z_OBJPROP_P(getThis()), "ffmpeg_movie", sizeof("ffmpeg_movie")-1)) == NULL) {
-        zend_error(E_WARNING, "Invalid ffmpeg_movie object");
-        RETURN_FALSE;
-	} else {
-		ffmovie_ctx = (ff_movie_context *)(le->ptr);
-    }
     RETURN_DOUBLE(_php_get_duration(ffmovie_ctx));
 }
 /* }}} */
