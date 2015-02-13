@@ -167,7 +167,7 @@ static ff_movie_context* _php_get_ffmovie_ctx()
 		}
 		if (le->type == le_ffmpeg_movie || le->type == le_ffmpeg_pmovie) {
 			ffmovie_ctx = (ff_movie_context *)(le->ptr);
-			fprintf(stderr, "_php_get_ffmovie_ctx ffmovie_ctx->rsrc_id = %d, le->ptr = %d\n", ffmovie_ctx->rsrc_id, le->ptr);
+			//fprintf(stderr, "_php_get_ffmovie_ctx ffmovie_ctx->rsrc_id = %d, le->ptr = %d\n", ffmovie_ctx->rsrc_id, le->ptr);
 			return ffmovie_ctx;
 		}
 	}
@@ -345,7 +345,7 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
 			Z_ADDREF(argv[i]);
 		}
 		keylen += Z_STRLEN(argv[i]);
-		fprintf(stderr, "__construct keylen = %d, i = %d, argv[i] = %s\n", keylen, i, Z_STRVAL(argv[i]));
+		//fprintf(stderr, "__construct keylen = %d, i = %d, argv[i] = %s\n", keylen, i, Z_STRVAL(argv[i]));
 	}
 
     switch (ZEND_NUM_ARGS()) {
@@ -483,8 +483,8 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
     object_init_ex(getThis(), ffmpeg_movie_class_entry_ptr);
     add_property_resource(getThis(), "ffmpeg_movie", ffmovie_ctx->rsrc_id);
 #endif
-	fprintf(stderr, "ffmovie_ctx = %d, ffmovie_ctx->rsrc_id = %d, filename = %s, return_value = %d, getThis() = %d\n",
-		ffmovie_ctx, ffmovie_ctx->rsrc_id, ffmovie_ctx->fmt_ctx->filename, return_value, getThis());
+//	fprintf(stderr, "ffmovie_ctx = %d, ffmovie_ctx->rsrc_id = %d, filename = %s, return_value = %d, getThis() = %d\n",
+//		ffmovie_ctx, ffmovie_ctx->rsrc_id, ffmovie_ctx->fmt_ctx->filename, return_value, getThis());
 
     efree(argv);
     if (fullpath) {
@@ -770,7 +770,7 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getDuration)
 //	} else {
 //		ffmovie_ctx = (ff_movie_context *)(le->ptr);
 //	}
-	fprintf(stderr, "getDuration return_value = %d, getThis() = %d\n", return_value, getThis());
+//	fprintf(stderr, "getDuration return_value = %d, getThis() = %d\n", return_value, getThis());
     RETURN_DOUBLE(_php_get_duration(ffmovie_ctx));
 }
 /* }}} */
