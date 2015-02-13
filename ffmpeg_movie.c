@@ -478,7 +478,6 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
 //	    }
 
 #if PHP_VERSION_ID >= 70000
-    //object_init_ex(getThis(), ffmpeg_movie_class_entry_ptr);
     add_property_resource(getThis(), "ffmpeg_movie", ffmovie_ctx->rsrc_id);
 #else
     object_init_ex(getThis(), ffmpeg_movie_class_entry_ptr);
