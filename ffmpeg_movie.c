@@ -479,8 +479,7 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
 		/* add it to the hash */
 		new_le.ptr = (void *) Z_RES_P(return_value);
 		new_le.type = le_ffmpeg_movie;
-		if (zend_hash_str_update_mem(&EG(regular_list), hashkey, hashkey_length+1,
-				(void *) &new_le, sizeof(zend_resource)) == NULL) {
+		if (zend_hash_update_ptr(&EG(regular_list), hashkey, &new_le) == NULL) {
 			RETURN_FALSE;
 		}
 #else
@@ -491,20 +490,22 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
 #endif
 //	    }
 
-    object_init_ex(getThis(), ffmpeg_movie_class_entry_ptr);
 #if PHP_VERSION_ID >= 70000
-    add_property_resource_ex(getThis(), "ffmpeg_movie", sizeof("ffmpeg_movie")-1, ffmovie_ctx->rsrc_id);
+    //object_init_ex(getThis(), ffmpeg_movie_class_entry_ptr);
+    add_property_resource(getThis(), "ffmpeg_movie", ffmovie_ctx->rsrc_id);
 #else
+    object_init_ex(getThis(), ffmpeg_movie_class_entry_ptr);
     add_property_resource(getThis(), "ffmpeg_movie", ffmovie_ctx->rsrc_id);
 #endif
-	fprintf(stderr, "ffmovie_ctx = %d, ffmovie_ctx->rsrc_id = %d, filename = %s, getThis() = %d\n", ffmovie_ctx, ffmovie_ctx->rsrc_id, filename, getThis());
+	fprintf(stderr, "ffmovie_ctx = %d, ffmovie_ctx->rsrc_id = %d, filename = %s, return_value = %d, getThis() = %d\n",
+		ffmovie_ctx, ffmovie_ctx->rsrc_id, ffmovie_ctx->fmt_ctx->filename, return_value, getThis());
 
     efree(argv);
     if (fullpath) {
         efree(fullpath);
     }
     if (hashkey) {
-        efree(hashkey);
+        zend_string_release(hashkey);
     }
 }
 /* }}} */
@@ -775,7 +776,9 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getDuration)
 {
     ff_movie_context *ffmovie_ctx;  
     zend_resource *le;
-
+	
+	fprintf(stderr, "getDuration return_value = %d, getThis() = %d\n", return_value, getThis());
+	
 	if ((le = zend_hash_str_find_ptr(Z_OBJPROP_P(getThis()), "ffmpeg_movie", sizeof("ffmpeg_movie")-1)) == NULL) {
         zend_error(E_WARNING, "Invalid ffmpeg_movie object");
         RETURN_FALSE;

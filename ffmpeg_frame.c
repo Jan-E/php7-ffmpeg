@@ -171,13 +171,15 @@ ff_frame_context* _php_create_ffmpeg_frame(INTERNAL_FUNCTION_PARAMETERS)
 	ff_frame = _php_alloc_ff_frame();
 
 #if PHP_VERSION_ID >= 70000
-	ZVAL_RES(ret, zend_register_resource(ff_frame, le_ffmpeg_frame));
+	RETVAL_RES(zend_register_resource(ff_frame, le_ffmpeg_frame));
+	object_init_ex(return_value, ffmpeg_frame_class_entry_ptr);
+	add_property_resource_ex(return_value, "ffmpeg_frame", sizeof("ffmpeg_frame")-1, ff_frame);
 #else
 	ret = ZEND_REGISTER_RESOURCE(NULL, ff_frame, le_ffmpeg_frame);
-#endif
-
 	object_init_ex(return_value, ffmpeg_frame_class_entry_ptr);
 	add_property_resource(return_value, "ffmpeg_frame", ret);
+#endif
+
 	return ff_frame;
 }
 /* }}} */
