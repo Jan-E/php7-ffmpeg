@@ -51,7 +51,9 @@
 #define FFSWAP(type,a,b) do{type SWAP_tmp= b; b= a; a= SWAP_tmp;}while(0)
 #define FF_ARRAY_ELEMS(a) (sizeof(a) / sizeof((a)[0]))
 #define FFALIGN(x, a) (((x)+(a)-1)&~((a)-1))
+#ifndef inline
 #define inline __inline
+#endif
 
 /* misc math functions */
 extern const uint8_t ff_log2_tab[256];

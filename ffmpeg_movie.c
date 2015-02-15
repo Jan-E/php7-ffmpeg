@@ -98,7 +98,11 @@ typedef struct {
     AVCodecContext *codec_ctx[MAX_STREAMS];
     int64_t last_pts;
     int frame_number;
+#if PHP_VERSION_ID >= 70000
+    zend_resource *rsrc_id;
+#else
     long rsrc_id;
+#endif
 } ff_movie_context;
 
 static zend_class_entry *ffmpeg_movie_class_entry_ptr;
@@ -180,6 +184,7 @@ static ff_movie_context* _php_get_ffmovie_ctx()
 static int _php_get_stream_index(AVFormatContext *fmt_ctx, int type)
 {
     int i;
+	//fprintf(stderr, "_php_get_stream_index fmt_ctx->nb_streams = %d\n", fmt_ctx->nb_streams);
     
     for (i = 0; i < fmt_ctx->nb_streams; i++) {
         if (fmt_ctx->streams[i] && 
@@ -328,7 +333,7 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
 	char *key = NULL, *error = NULL;
 	int keylen = 0;
 	int i;
-	zend_resource new_le;
+	//zend_resource new_le;
 
 	/* we pass additional args to the respective handler */
 	argv = safe_emalloc(ac, sizeof(zval), 0);
@@ -490,9 +495,9 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
     if (fullpath) {
         efree(fullpath);
     }
-    if (hashkey) {
-        zend_string_release(hashkey);
-    }
+//    if (hashkey) {
+//        zend_string_release(hashkey);
+//    }
 }
 /* }}} */
 
@@ -761,7 +766,7 @@ static float _php_get_duration(ff_movie_context *ffmovie_ctx)
 FFMPEG_PHP_METHOD(ffmpeg_movie, getDuration)
 {
     ff_movie_context *ffmovie_ctx;  
-    zend_resource *le;
+//	zend_resource *le;
 	
     GET_MOVIE_RESOURCE(ffmovie_ctx);
 //	if ((le = zend_hash_str_find_ptr(Z_OBJPROP_P(getThis()), "ffmpeg_movie", sizeof("ffmpeg_movie")-1)) == NULL) {
@@ -1493,7 +1498,7 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getNextKeyFrame)
  */
 FFMPEG_PHP_METHOD(ffmpeg_movie, getFrame)
 {
-	zval *argv;
+	zval *argv = NULL;
     int wanted_frame = 0; 
     ff_movie_context *ffmovie_ctx;
 	int ac = ZEND_NUM_ARGS();
@@ -1614,7 +1619,8 @@ PHP_FUNCTION(ffmpeg_movie_list)
 		}
 		if (le->type == le_ffmpeg_movie || le->type == le_ffmpeg_pmovie) {
 			ffmovie_ctx = (ff_movie_context *)(le->ptr);
-			add_index_long(return_value, i, le->ptr);
+			//zend_hash_index_update(Z_ARRVAL_P(return_value), i, le->ptr);
+			add_index_long(return_value, i, (zend_long)le->ptr);
 			add_index_string(return_value, 10*i, ffmovie_ctx->fmt_ctx->filename);
 		}
 	}
