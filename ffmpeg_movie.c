@@ -1365,6 +1365,7 @@ static AVFrame* _php_get_av_frame(ff_movie_context *ffmovie_ctx,
     if (decoder_ctx == NULL) {
         return NULL;
     }
+	fprintf(stderr, "_php_get_av_frame ffmovie_ctx->frame_number = %d\n", ffmovie_ctx->frame_number);
 
     /* Rewind to the beginning of the stream if wanted frame already passed */
     if (wanted_frame > 0 && wanted_frame <= ffmovie_ctx->frame_number) {
@@ -1415,6 +1416,7 @@ static AVFrame* _php_get_av_frame(ff_movie_context *ffmovie_ctx,
             return frame;
         }
     }
+	fprintf(stderr, "_php_get_av_frame #2 ffmovie_ctx->frame_number = %d\n", ffmovie_ctx->frame_number);
 
     av_free(frame);
     return NULL;
@@ -1434,6 +1436,7 @@ static int _php_get_ff_frame(ff_movie_context *ffmovie_ctx,
     ff_frame_context *ff_frame;
  
     frame = _php_get_av_frame(ffmovie_ctx, wanted_frame, &is_keyframe, &pts);
+	fprintf(stderr, "_php_get_ff_frame getThis() = %d\n", getThis());
     if (frame) { 
         /*
          * _php_create_ffmpeg_frame sets PHP return_value to a ffmpeg_frame
@@ -1511,6 +1514,7 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getFrame)
 
     if (ZEND_NUM_ARGS()) {
         /* retrieve arguments */ 
+		argv = safe_emalloc(ac, sizeof(zval), 0);
 		if (zend_get_parameters_array_ex(ac, argv) != SUCCESS) {
 			efree(argv);
 			WRONG_PARAM_COUNT;
