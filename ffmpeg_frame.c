@@ -58,21 +58,6 @@
 	}
 #endif
 
-#ifndef _zend_list_addref
-int _zend_list_addref(int id TSRMLS_DC)
-{
-	zend_resource *le;
-	
-	if (zend_hash_index_find(&EG(regular_list), id, (void **) &le)==SUCCESS) {
-/*		printf("add(%d): %d->%d\n", id, le->refcount, le->refcount+1); */
-/*		le->refcount++; */
-		return SUCCESS;
-	} else {
-		return FAILURE;
-	}
-}
-#endif
-
 /* 
    include gd header from local include dir. This is a copy of gd.h that is 
    distributed with php-5.2.5. It is distributed along with ffmpeg-php to
@@ -84,7 +69,7 @@ int _zend_list_addref(int id TSRMLS_DC)
 #if PHP_VERSION_ID >= 70000
 #define FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, ret) { \
 	ZEND_GET_RESOURCE_TYPE_ID(le_gd, "gd"); \
-	gd_img = (gdImagePtr *)zend_fetch_resource(ret, "Image", le_gd); \
+	gd_img = (gdImagePtr *)zend_fetch_resource_ex(ret, "Image", le_gd); \
 }
 #else
 #define FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, ret) { \
@@ -165,7 +150,7 @@ static ff_frame_context* _php_alloc_ff_frame()
    */
 ff_frame_context* _php_create_ffmpeg_frame(INTERNAL_FUNCTION_PARAMETERS)
 {
-	int ret;
+	//int ret;
 	ff_frame_context *ff_frame;
 
 	ff_frame = _php_alloc_ff_frame();
@@ -174,6 +159,7 @@ ff_frame_context* _php_create_ffmpeg_frame(INTERNAL_FUNCTION_PARAMETERS)
 	ff_frame->av_frame = zend_register_resource(ff_frame, le_ffmpeg_frame);
 	object_init_ex(return_value, ffmpeg_frame_class_entry_ptr);
 	add_property_resource(return_value, "ffmpeg_frame", ff_frame->av_frame);
+	fprintf(stderr, "_php_create_ffmpeg_frame width = %d, height = %d, ff_frame->av_frame = %d\n", ff_frame->width, ff_frame->height, ff_frame->av_frame);
 #else
 	ret = ZEND_REGISTER_RESOURCE(NULL, ff_frame, le_ffmpeg_frame);
 	object_init_ex(return_value, ffmpeg_frame_class_entry_ptr);
@@ -271,58 +257,48 @@ int _php_convert_frame(ff_frame_context *ff_frame, int dst_fmt) {
 
 /* {{{ _php_get_gd_image()
 */
-static int _php_get_gd_image(int w, int h)
+static int _php_get_gd_image(int ww, int hh)
 {
-	zval *function_name, *width, *height;
-	zval **argv[2];
+	zval function_name, width, height;
+	zval *argv = NULL;
 	zend_function *func;
-	zval *retval;
-	char *function_cname = "imagecreatetruecolor";
+	zval *retval = NULL;
 	int ret;
+	zend_string *function_cname = zend_string_init("imagecreatetruecolor", sizeof("imagecreatetruecolor")-1, 0);
 	TSRMLS_FETCH();
 
-	if (zend_hash_find(EG(function_table), function_cname, 
-	            strlen(function_cname) + 1, (void **)&func) == FAILURE) {
-	    zend_error(E_ERROR, "Error can't find %s function", function_cname);
+	ZVAL_STRING(&function_name, "imagecreatetruecolor");
+	ZVAL_LONG(&width, ww);
+	ZVAL_LONG(&height, hh);
+	argv = (zval *)safe_emalloc(sizeof(zval), 2, 0);
+	argv[0] = width;
+	argv[1] = height;
+
+	fprintf(stderr, "_php_get_gd_image #1 Calling %s function %d x %d\n", function_cname->val, argv[0], argv[1]);
+	if ((func = Z_PTR_P(&function_name)) == NULL) {
+		fprintf(stderr, "_php_get_gd_image can't find %s function\n", function_cname->val);
+	    zend_error(E_ERROR, "Error can't find %s function", function_cname->val);
 	}
 
-#if PHP_VERSION_ID < 70000
-	MAKE_STD_ZVAL(function_name);
-	MAKE_STD_ZVAL(width);
-	MAKE_STD_ZVAL(height);
-#endif
+	fprintf(stderr, "_php_get_gd_image #2 Calling %s function %d x %d\n", function_cname->val, argv[0], argv[1]);
 
-	ZVAL_STRING(function_name, function_cname, 0);
-	ZVAL_LONG(width, w);
-	ZVAL_LONG(height, h);
-
-	argv[0] = &width;
-	argv[1] = &height;
-
-	if (call_user_function_ex(EG(function_table), NULL, function_name, 
-	            &retval, 2, argv, 0, NULL TSRMLS_CC) == FAILURE) {
-	    zend_error(E_ERROR, "Error calling %s function", function_cname);
+	if (FAILURE == call_user_function(EG(function_table), NULL, &function_name, 
+	            retval, 2, argv)) {
+		fprintf(stderr, "_php_get_gd_image Error calling %s function\n", function_cname->val);
+	    zend_error(E_ERROR, "Error calling %s function", function_cname->val);
 	}
+	fprintf(stderr, "_php_get_gd_image #3 Calling %s function %d x %d\n", function_cname->val, argv[0], argv[1]);
 
-#if PHP_VERSION_ID < 70000
-	FREE_ZVAL(function_name); 
-	FREE_ZVAL(width); 
-	FREE_ZVAL(height);
-#endif
-
-#if PHP_VERSION_ID >= 70000
 	if (!retval || Z_TYPE_P(retval) != IS_RESOURCE) {
-#else
-	if (!retval || retval->type != IS_RESOURCE) {
-#endif
 	    php_error_docref(NULL TSRMLS_CC, E_ERROR,
 	            "Error creating GD Image");
 	}
+	fprintf(stderr, "_php_get_gd_image #4 Calling %s function %d x %d\n", function_cname->val, argv[0], argv[1]);
 
 	ret = retval->value.lval;
-	_zend_list_addref(ret); 
+	/* _zend_list_addref(ret); */
 	if (retval) {
-	    zval_ptr_dtor(&retval);
+	    zval_ptr_dtor(retval);
 	}
 
 	return ret;
@@ -384,18 +360,26 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, toGDImage)
 	ff_frame_context *ff_frame;
 	gdImage *gd_img;
 
-	GET_FRAME_RESOURCE(getThis(), ff_frame);
+//	GET_FRAME_RESOURCE(getThis(), ff_frame);
+    zend_resource *le;
+	if ((le = zend_hash_str_find_ptr(Z_OBJPROP_P(getThis()), "ffmpeg_frame", sizeof("ffmpeg_frame")-1)) == NULL) {
+        zend_error(E_WARNING, "Invalid ffmpeg_frame object");
+        RETURN_FALSE;
+	} else {
+		ff_frame = (ff_frame_context *)(le->ptr);
+    }
 
 	_php_convert_frame(ff_frame, FFMPEG_PHP_FFMPEG_RGB_PIX_FORMAT);
 
-	return_value->value.lval = _php_get_gd_image(ff_frame->width, 
-	        ff_frame->height);
+	fprintf(stderr, "before toGDImage width = %d, height = %d, le->ptr = %d\n", ff_frame->width, ff_frame->height, le->ptr);
+	return_value->value.lval = _php_get_gd_image(ff_frame->width, ff_frame->height);
+	//fprintf(stderr, "after  toGDImage width = %d, height = %d, ff_frame->av_frame = %d\n", ff_frame->width, ff_frame->height, ff_frame->av_frame);
 
 #if PHP_VERSION_ID < 70000
 	return_value->type = IS_RESOURCE;
 #endif
 
-	FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, &return_value);
+	FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, return_value);
 
 	if (_php_avframe_to_gd_image(ff_frame->av_frame, gd_img,
 	            ff_frame->width, ff_frame->height)) {
@@ -409,17 +393,18 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, toGDImage)
 */
 FFMPEG_PHP_METHOD(ffmpeg_frame, ffmpeg_frame)
 {
-	zval **argv[1];
+	zval *argv = NULL;
 	AVFrame *frame;
 	gdImage *gd_img;
 	ff_frame_context *ff_frame;
-	int width, height, ret;
+	int width, height; //, ret;
 
 	if (ZEND_NUM_ARGS() != 1) {
 	    WRONG_PARAM_COUNT;
 	}
 
 	/* retrieve argument */
+	argv = (zval *)safe_emalloc(sizeof(zval), ZEND_NUM_ARGS(), 0);
 	if (zend_get_parameters_array_ex(ZEND_NUM_ARGS(), argv) != SUCCESS) {
 	    php_error_docref(NULL TSRMLS_CC, E_ERROR,
 	            "Error parsing arguments");
@@ -428,13 +413,14 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, ffmpeg_frame)
 	ff_frame = _php_alloc_ff_frame();
 
 #if PHP_VERSION_ID >= 70000
-	ret = zend_register_resource(ff_frame, le_ffmpeg_frame);
+	ff_frame->av_frame = zend_register_resource(ff_frame, le_ffmpeg_frame);
+	add_property_resource(getThis(), "ffmpeg_frame", ff_frame->av_frame);
 #else
 	ret = ZEND_REGISTER_RESOURCE(NULL, ff_frame, le_ffmpeg_frame);
-#endif
-
 	object_init_ex(getThis(), ffmpeg_frame_class_entry_ptr);
 	add_property_resource(getThis(), "ffmpeg_frame", ret);
+#endif
+
 
 //	switch (Z_TYPE_PP(argv[0])) {
 //	    case IS_STRING:
@@ -444,7 +430,7 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, ffmpeg_frame)
 //	        //_php_read_frame_from_file(ff_frame, Z_STRVAL_PP(argv[0]));
 //	        break;
 //	    case IS_RESOURCE:
-	        FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, argv[0]);
+	        FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, &argv[0]);
 
 	        if (!gd_img->trueColor) {
 	            php_error_docref(NULL TSRMLS_CC, E_ERROR,
@@ -589,7 +575,7 @@ int _php_resample_frame(ff_frame_context *ff_frame,
 */
 FFMPEG_PHP_METHOD(ffmpeg_frame, resize)
 {
-	zval ***argv;
+	zval *argv;
 	ff_frame_context *ff_frame = NULL;
 	int wanted_width = 0, wanted_height = 0;
 	int crop_top = 0, crop_bottom = 0, crop_left = 0, crop_right = 0;
@@ -597,8 +583,7 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, resize)
 	GET_FRAME_RESOURCE(getThis(), ff_frame);
 
 	/* retrieve arguments */ 
-	argv = (zval ***) safe_emalloc(sizeof(zval **), ZEND_NUM_ARGS(), 0);
-
+	argv = (zval *)safe_emalloc(sizeof(zval), ZEND_NUM_ARGS(), 0);
 	if (zend_get_parameters_array_ex(ZEND_NUM_ARGS(), argv) != SUCCESS) {
 	    efree(argv);
 	    php_error_docref(NULL TSRMLS_CC, E_ERROR,
@@ -607,8 +592,8 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, resize)
 
 	switch (ZEND_NUM_ARGS()) {
 	    case 6:
-	        convert_to_long_ex(argv[5]);
-	        crop_right = argv[5];
+	        convert_to_long_ex(&argv[5]);
+	        crop_right = Z_LVAL(argv[5]);
 
 	        /* crop right must be even number for lavc cropping */
 	        if (crop_right % 2) {
@@ -617,8 +602,8 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, resize)
 	        }
 	        /* fallthru */
 	    case 5:
-	        convert_to_long_ex(argv[4]);
-	        crop_left = argv[4];
+	        convert_to_long_ex(&argv[4]);
+	        crop_left = Z_LVAL(argv[4]);
 
 	        /*  crop left must be even number for lavc cropping */
 	        if (crop_left % 2) {
@@ -628,8 +613,8 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, resize)
 
 	        /* fallthru */
 	    case 4:
-	        convert_to_long_ex(argv[3]);
-	        crop_bottom = argv[3];
+	        convert_to_long_ex(&argv[3]);
+	        crop_bottom = Z_LVAL(argv[3]);
 
 	        /*  crop bottom must be even number for lavc cropping */
 	        if (crop_bottom % 2) {
@@ -639,8 +624,8 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, resize)
 
 	        /* fallthru */
 	    case 3:
-	        convert_to_long_ex(argv[2]);
-	        crop_top = argv[2];
+	        convert_to_long_ex(&argv[2]);
+	        crop_top = Z_LVAL(argv[2]);
 
 	        /*  crop top must be even number for lavc cropping */
 	        if (crop_top % 2) {
@@ -651,8 +636,8 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, resize)
 	        /* fallthru */
 	    case 2:
 	        /* height arg */
-	        convert_to_long_ex(argv[1]);
-	        wanted_height = argv[1];
+	        convert_to_long_ex(&argv[1]);
+	        wanted_height = Z_LVAL(argv[1]);
 
 	        /* bounds check wanted height */
 	        if (wanted_height < 1) {
@@ -668,8 +653,8 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, resize)
 	        /* fallthru */
 	    case 1:
 	        /* width arg */
-	        convert_to_long_ex(argv[0]);
-	        wanted_width = argv[0];
+	        convert_to_long_ex(&argv[0]);
+	        wanted_width = Z_LVAL(argv[0]);
 
 	        /* bounds check wanted width */
 	        if (wanted_width < 1) {
@@ -687,7 +672,7 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, resize)
 	        WRONG_PARAM_COUNT;
 	} 
 
-	efree(argv);
+	//efree(argv);
 
 	/* resize frame */
 	_php_resample_frame(ff_frame, wanted_width, wanted_height, 
@@ -702,15 +687,14 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, resize)
 */
 PHP_FUNCTION(crop)
 {
-	zval ***argv;
+	zval *argv;
 	ff_frame_context *ff_frame;
 	int crop_top = 0, crop_bottom = 0, crop_left = 0, crop_right = 0;
 
 	GET_FRAME_RESOURCE(getThis(), ff_frame);
 
 	/* retrieve arguments */ 
-	argv = (zval ***) safe_emalloc(sizeof(zval **), ZEND_NUM_ARGS(), 0);
-
+	argv = (zval *) safe_emalloc(sizeof(zval), ZEND_NUM_ARGS(), 0);
 	if (zend_get_parameters_array_ex(ZEND_NUM_ARGS(), argv) != SUCCESS) {
 	    efree(argv);
 	    php_error_docref(NULL TSRMLS_CC, E_ERROR,
@@ -719,8 +703,8 @@ PHP_FUNCTION(crop)
 
 	switch (ZEND_NUM_ARGS()) {
 	    case 4:
-	        convert_to_long_ex(argv[3]);
-	        crop_right = argv[3];
+	        convert_to_long_ex(&argv[3]);
+	        crop_right = Z_LVAL(argv[3]);
 
 	        /* crop right must be even number for lavc cropping */
 	        if (crop_right % 2) {
@@ -729,8 +713,8 @@ PHP_FUNCTION(crop)
 	        }
 	        /* fallthru */
 	    case 3:
-	        convert_to_long_ex(argv[2]);
-	        crop_left = argv[2];
+	        convert_to_long_ex(&argv[2]);
+	        crop_left = Z_LVAL(argv[2]);
 
 	        /*  crop left must be even number for lavc cropping */
 	        if (crop_left % 2) {
@@ -740,8 +724,8 @@ PHP_FUNCTION(crop)
 
 	        /* fallthru */
 	    case 2:
-	        convert_to_long_ex(argv[1]);
-	        crop_bottom = argv[1];
+	        convert_to_long_ex(&argv[1]);
+	        crop_bottom = Z_LVAL(argv[1]);
 
 	        /*  crop bottom must be even number for lavc cropping */
 	        if (crop_bottom % 2) {
@@ -751,8 +735,8 @@ PHP_FUNCTION(crop)
 
 	        /* fallthru */
 	    case 1:
-	        convert_to_long_ex(argv[0]);
-	        crop_top = argv[0];
+	        convert_to_long_ex(&argv[0]);
+	        crop_top = Z_LVAL(argv[0]);
 
 	        /*  crop top  must be even number for lavc cropping */
 	        if (crop_top % 2) {
@@ -764,7 +748,7 @@ PHP_FUNCTION(crop)
 	        WRONG_PARAM_COUNT;
 	} 
 
-	efree(argv);
+	//efree(argv);
 
 	/* resample with same dimensions */
 	_php_resample_frame(ff_frame, ff_frame->width, ff_frame->height, 

@@ -53,12 +53,12 @@ static inline int av_cmp_q(AVRational a, AVRational b){
 }
 
 /**
- * Converts rational to double.
+ * Converts rational to float.
  * @param a rational to convert
- * @return (double) a
+ * @return (float) a
  */
-static inline double av_q2d(AVRational a){
-    return a.num / (double) a.den;
+static inline float av_q2d(AVRational a){
+    return a.num / (float) a.den;
 }
 
 /**

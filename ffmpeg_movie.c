@@ -1577,7 +1577,7 @@ static double _php_get_sample_aspect_ratio(ff_movie_context *ffmovie_ctx)
 		}
 	}
 
-    return av_q2d(decoder_ctx->sample_aspect_ratio);
+    return (double)av_q2d(decoder_ctx->sample_aspect_ratio);
 }
 /* }}} */
 
