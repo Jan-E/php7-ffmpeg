@@ -336,7 +336,7 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
 	//zend_resource new_le;
 
 	/* we pass additional args to the respective handler */
-	argv = safe_emalloc(ac, sizeof(zval), 0);
+	argv = (zval *)safe_emalloc(sizeof(zval), ac, 0);
 	if (zend_get_parameters_array_ex(ac, argv) != SUCCESS) {
 		efree(argv);
 		WRONG_PARAM_COUNT;
@@ -1514,7 +1514,7 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getFrame)
 
     if (ZEND_NUM_ARGS()) {
         /* retrieve arguments */ 
-		argv = safe_emalloc(ac, sizeof(zval), 0);
+		argv = (zval *)safe_emalloc(sizeof(zval), ac, 0);
 		if (zend_get_parameters_array_ex(ac, argv) != SUCCESS) {
 			efree(argv);
 			WRONG_PARAM_COUNT;

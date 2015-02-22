@@ -265,16 +265,17 @@ static int _php_get_gd_image(int ww, int hh)
 	zval *retval = NULL;
 	int ret;
 	zend_string *function_cname = zend_string_init("imagecreatetruecolor", sizeof("imagecreatetruecolor")-1, 0);
+	fprintf(stderr, "_php_get_gd_image #0 %d x %d\n", ww, hh);
 	TSRMLS_FETCH();
 
 	ZVAL_STRING(&function_name, "imagecreatetruecolor");
 	ZVAL_LONG(&width, ww);
 	ZVAL_LONG(&height, hh);
-	argv = (zval *)safe_emalloc(sizeof(zval), 2, 0);
-	argv[0] = width;
+	argv = safe_emalloc(sizeof(zval), 2, 0);
 	argv[1] = height;
+	argv[0] = width;
 
-	fprintf(stderr, "_php_get_gd_image #1 Calling %s function %d x %d\n", function_cname->val, argv[0], argv[1]);
+	fprintf(stderr, "_php_get_gd_image #1 Calling %s, %d x %d => %d x %d\n", function_cname->val, ww, hh, argv[0], argv[1]);
 	if ((func = Z_PTR_P(&function_name)) == NULL) {
 		fprintf(stderr, "_php_get_gd_image can't find %s function\n", function_cname->val);
 	    zend_error(E_ERROR, "Error can't find %s function", function_cname->val);
@@ -282,10 +283,10 @@ static int _php_get_gd_image(int ww, int hh)
 
 	fprintf(stderr, "_php_get_gd_image #2 Calling %s function %d x %d\n", function_cname->val, argv[0], argv[1]);
 
-	if (FAILURE == call_user_function(EG(function_table), NULL, &function_name, 
-	            retval, 2, argv)) {
-		fprintf(stderr, "_php_get_gd_image Error calling %s function\n", function_cname->val);
-	    zend_error(E_ERROR, "Error calling %s function", function_cname->val);
+	if (FAILURE == call_user_function_ex(EG(function_table), NULL, &function_name, 
+	            retval, 2, argv, 0, NULL TSRMLS_CC)) {
+		//fprintf(stderr, "_php_get_gd_image Error calling %s function\n", function_cname->val);
+	    //zend_error(E_ERROR, "Error calling %s function", function_cname->val);
 	}
 	fprintf(stderr, "_php_get_gd_image #3 Calling %s function %d x %d\n", function_cname->val, argv[0], argv[1]);
 
@@ -672,7 +673,7 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, resize)
 	        WRONG_PARAM_COUNT;
 	} 
 
-	//efree(argv);
+	efree(argv);
 
 	/* resize frame */
 	_php_resample_frame(ff_frame, wanted_width, wanted_height, 
@@ -748,7 +749,7 @@ PHP_FUNCTION(crop)
 	        WRONG_PARAM_COUNT;
 	} 
 
-	//efree(argv);
+	efree(argv);
 
 	/* resample with same dimensions */
 	_php_resample_frame(ff_frame, ff_frame->width, ff_frame->height, 
