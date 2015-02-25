@@ -259,48 +259,44 @@ int _php_convert_frame(ff_frame_context *ff_frame, int dst_fmt) {
 */
 static int _php_get_gd_image(int ww, int hh)
 {
-	zval function_name, width, height;
-	zval *argv = NULL;
-	zend_function *func;
-	zval *retval = NULL;
-	int ret;
-	zend_string *function_cname = zend_string_init("imagecreatetruecolor", sizeof("imagecreatetruecolor")-1, 0);
-	fprintf(stderr, "_php_get_gd_image #0 %d x %d\n", ww, hh);
+	zval gd_function_name;
+	zval gd_argv[2]; /* borrowed from php_pcre.c */
+	zend_function *gd_func;
+	zval retval;
+	zend_long ret;
 	TSRMLS_FETCH();
 
-	ZVAL_STRING(&function_name, "imagecreatetruecolor");
-	ZVAL_LONG(&width, ww);
-	ZVAL_LONG(&height, hh);
-	argv = safe_emalloc(sizeof(zval), 2, 0);
-	argv[1] = height;
-	argv[0] = width;
+	array_init_size(&gd_argv[0], 2);
+	ZVAL_LONG(&gd_argv[0], (zend_long)ww);
+	ZVAL_LONG(&gd_argv[1], (zend_long)hh);
+	ZVAL_STRING(&gd_function_name, "imagecreatetruecolor");
 
-	fprintf(stderr, "_php_get_gd_image #1 Calling %s, %d x %d => %d x %d\n", function_cname->val, ww, hh, argv[0], argv[1]);
-	if ((func = Z_PTR_P(&function_name)) == NULL) {
-		fprintf(stderr, "_php_get_gd_image can't find %s function\n", function_cname->val);
-	    zend_error(E_ERROR, "Error can't find %s function", function_cname->val);
+	if ((gd_func = Z_PTR_P(&gd_function_name)) == NULL) {
+	    zend_error(E_ERROR, "Error can't find %s function", "imagecreatetruecolor");
 	}
 
-	fprintf(stderr, "_php_get_gd_image #2 Calling %s function %d x %d\n", function_cname->val, argv[0], argv[1]);
+//	fprintf(stderr, "_php_get_gd_image #1 Calling %s function %ld x %ld\n", "imagecreatetruecolor", ww, hh);
 
-	if (FAILURE == call_user_function_ex(EG(function_table), NULL, &function_name, 
-	            retval, 2, argv, 0, NULL TSRMLS_CC)) {
-		//fprintf(stderr, "_php_get_gd_image Error calling %s function\n", function_cname->val);
-	    //zend_error(E_ERROR, "Error calling %s function", function_cname->val);
+	if (call_user_function_ex(EG(function_table), NULL, &gd_function_name, 
+			&retval, 2, gd_argv, 0, NULL) == SUCCESS && Z_TYPE(retval) != IS_UNDEF) {
+				/* hooray */
+	} else {
+	    zend_error(E_ERROR, "Error calling %s function", "imagecreatetruecolor");
 	}
-	fprintf(stderr, "_php_get_gd_image #3 Calling %s function %d x %d\n", function_cname->val, argv[0], argv[1]);
+//	fprintf(stderr, "_php_get_gd_image #2 Calling %s function %ld x %ld\n", "imagecreatetruecolor", ww, hh);
 
-	if (!retval || Z_TYPE_P(retval) != IS_RESOURCE) {
-	    php_error_docref(NULL TSRMLS_CC, E_ERROR,
-	            "Error creating GD Image");
-	}
-	fprintf(stderr, "_php_get_gd_image #4 Calling %s function %d x %d\n", function_cname->val, argv[0], argv[1]);
+//	if (!retval || Z_TYPE_P(retval) != IS_RESOURCE) {
+//	    php_error_docref(NULL TSRMLS_CC, E_ERROR,
+//	            "Error creating GD Image");
+//	}
 
-	ret = retval->value.lval;
+	ret = retval.value.lval;
 	/* _zend_list_addref(ret); */
-	if (retval) {
-	    zval_ptr_dtor(retval);
+	if (&retval) {
+	    zval_ptr_dtor(&retval);
 	}
+//	fprintf(stderr, "_php_get_gd_image Called %s function %ld x %ld, ret = %ld\n", "imagecreatetruecolor", ww, hh, ret);
+//	__asm int 3; /* breakpoint */
 
 	return ret;
 }
@@ -316,6 +312,7 @@ static int _php_avframe_to_gd_image(AVFrame *frame, gdImage *dest, int width,
 {
 	int x, y;
 	int *src = (int*)frame->data[0];
+	__asm int 3; /* breakpoint */
 
 	for (y = 0; y < height; y++) {
 	    for (x = 0; x < width; x++) {
@@ -372,7 +369,7 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, toGDImage)
 
 	_php_convert_frame(ff_frame, FFMPEG_PHP_FFMPEG_RGB_PIX_FORMAT);
 
-	fprintf(stderr, "before toGDImage width = %d, height = %d, le->ptr = %d\n", ff_frame->width, ff_frame->height, le->ptr);
+	//fprintf(stderr, "before toGDImage width = %d, height = %d, le->ptr = %d\n", ff_frame->width, ff_frame->height, le->ptr);
 	return_value->value.lval = _php_get_gd_image(ff_frame->width, ff_frame->height);
 	//fprintf(stderr, "after  toGDImage width = %d, height = %d, ff_frame->av_frame = %d\n", ff_frame->width, ff_frame->height, ff_frame->av_frame);
 
