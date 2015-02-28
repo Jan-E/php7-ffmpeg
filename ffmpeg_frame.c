@@ -312,7 +312,9 @@ static int _php_avframe_to_gd_image(AVFrame *frame, gdImage *dest, int width,
 {
 	int x, y;
 	int *src = (int*)frame->data[0];
+#ifndef _WIN64 // [
 	__asm int 3; /* breakpoint */
+#endif  // _WIN64 ]
 
 	for (y = 0; y < height; y++) {
 	    for (x = 0; x < width; x++) {
