@@ -76,7 +76,7 @@ int _php_convert_frame(ff_frame_context *ff_frame, int new_fmt);
 #if PHP_VERSION_ID >= 70000
 #define GET_FRAME_RESOURCE(ffmpeg_frame_object, ffmpeg_frame) {\
     zend_resource *le;\
-	if ((le = zend_hash_str_find_ptr(Z_OBJPROP_P(getThis()), "ffmpeg_frame", sizeof("ffmpeg_frame")-1)) == NULL) {\
+	if ((le = zend_hash_str_find_ptr(Z_OBJPROP_P(ffmpeg_frame_object), "ffmpeg_frame", sizeof("ffmpeg_frame")-1)) == NULL) {\
         zend_error(E_WARNING, "Invalid ffmpeg_frame object");\
         RETURN_FALSE;\
 	} else {\

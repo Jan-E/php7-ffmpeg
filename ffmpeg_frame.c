@@ -69,7 +69,9 @@
 #if PHP_VERSION_ID >= 70000
 #define FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, ret) { \
 	ZEND_GET_RESOURCE_TYPE_ID(le_gd, "gd"); \
-	gd_img = (gdImagePtr *)zend_fetch_resource_ex(ret, "Image", le_gd); \
+	if ((gd_img = (gdImagePtr)zend_fetch_resource(Z_RES_P(ret), "Image", le_gd)) == NULL) {\
+		RETURN_FALSE;\
+	}\
 }
 #else
 #define FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, ret) { \
@@ -150,16 +152,16 @@ static ff_frame_context* _php_alloc_ff_frame()
    */
 ff_frame_context* _php_create_ffmpeg_frame(INTERNAL_FUNCTION_PARAMETERS)
 {
-	//int ret;
+	zend_resource *ret;
 	ff_frame_context *ff_frame;
 
 	ff_frame = _php_alloc_ff_frame();
 
 #if PHP_VERSION_ID >= 70000
-	ff_frame->av_frame = zend_register_resource(ff_frame, le_ffmpeg_frame);
+	ret = zend_register_resource(ff_frame, le_ffmpeg_frame);
 	object_init_ex(return_value, ffmpeg_frame_class_entry_ptr);
-	add_property_resource(return_value, "ffmpeg_frame", ff_frame->av_frame);
-	fprintf(stderr, "_php_create_ffmpeg_frame width = %d, height = %d, ff_frame->av_frame = %d\n", ff_frame->width, ff_frame->height, ff_frame->av_frame);
+	add_property_resource(return_value, "ffmpeg_frame", ret);
+	fprintf(stderr, "_php_create_ffmpeg_frame return_value->value = %ld\n", return_value->value);
 #else
 	ret = ZEND_REGISTER_RESOURCE(NULL, ff_frame, le_ffmpeg_frame);
 	object_init_ex(return_value, ffmpeg_frame_class_entry_ptr);
@@ -285,17 +287,20 @@ static int _php_get_gd_image(int ww, int hh)
 	}
 //	fprintf(stderr, "_php_get_gd_image #2 Calling %s function %ld x %ld\n", "imagecreatetruecolor", ww, hh);
 
-//	if (!retval || Z_TYPE_P(retval) != IS_RESOURCE) {
-//	    php_error_docref(NULL TSRMLS_CC, E_ERROR,
-//	            "Error creating GD Image");
-//	}
+	if (Z_TYPE(retval) != IS_RESOURCE) {
+		fprintf(stderr, "_php_get_gd_image Error calling %s function %ld x %ld\n", "imagecreatetruecolor", ww, hh);
+	    php_error_docref(NULL TSRMLS_CC, E_ERROR,
+	            "Error creating GD Image");
+	}
 
 	ret = retval.value.lval;
-	/* _zend_list_addref(ret); */
-	if (&retval) {
-	    zval_ptr_dtor(&retval);
-	}
-//	fprintf(stderr, "_php_get_gd_image Called %s function %ld x %ld, ret = %ld\n", "imagecreatetruecolor", ww, hh, ret);
+	// _zend_list_addref(ret);
+	// Z_ADDREF_P(&retval);
+	Z_RES_P(&retval)->gc.refcount++;
+//	if (&retval) {
+//		zval_ptr_dtor(&retval);
+//	}
+	fprintf(stderr, "_php_get_gd_image Called %s function %ld x %ld, ret = %ld\n", "imagecreatetruecolor", ww, hh, ret);
 //	__asm int 3; /* breakpoint */
 
 	return ret;
@@ -312,9 +317,6 @@ static int _php_avframe_to_gd_image(AVFrame *frame, gdImage *dest, int width,
 {
 	int x, y;
 	int *src = (int*)frame->data[0];
-#ifndef _WIN64 // [
-	__asm int 3; /* breakpoint */
-#endif  // _WIN64 ]
 
 	for (y = 0; y < height; y++) {
 	    for (x = 0; x < width; x++) {
@@ -324,6 +326,9 @@ static int _php_avframe_to_gd_image(AVFrame *frame, gdImage *dest, int width,
                 /* copy pixel to gdimage buffer zeroing the alpha channel */
                 dest->tpixels[y][x] = src[x] & 0x00ffffff;
             } else {
+#ifndef _WIN64 // [
+				__asm int 3; /* breakpoint */
+#endif  // _WIN64 ]
                 return -1;
             }
 	    }
@@ -352,7 +357,6 @@ static int _php_gd_image_to_avframe(gdImage *src, AVFrame *frame, int width,
 }
 /* }}} */
 
-
 /* {{{ proto resource toGDImage()
 */
 FFMPEG_PHP_METHOD(ffmpeg_frame, toGDImage)
@@ -360,20 +364,13 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, toGDImage)
 	ff_frame_context *ff_frame;
 	gdImage *gd_img;
 
-//	GET_FRAME_RESOURCE(getThis(), ff_frame);
-    zend_resource *le;
-	if ((le = zend_hash_str_find_ptr(Z_OBJPROP_P(getThis()), "ffmpeg_frame", sizeof("ffmpeg_frame")-1)) == NULL) {
-        zend_error(E_WARNING, "Invalid ffmpeg_frame object");
-        RETURN_FALSE;
-	} else {
-		ff_frame = (ff_frame_context *)(le->ptr);
-    }
+	GET_FRAME_RESOURCE(getThis(), ff_frame);
 
 	_php_convert_frame(ff_frame, FFMPEG_PHP_FFMPEG_RGB_PIX_FORMAT);
 
 	//fprintf(stderr, "before toGDImage width = %d, height = %d, le->ptr = %d\n", ff_frame->width, ff_frame->height, le->ptr);
 	return_value->value.lval = _php_get_gd_image(ff_frame->width, ff_frame->height);
-	//fprintf(stderr, "after  toGDImage width = %d, height = %d, ff_frame->av_frame = %d\n", ff_frame->width, ff_frame->height, ff_frame->av_frame);
+	fprintf(stderr, "after  toGDImage return_value->value.lval = %d, width = %d, height = %d, ff_frame->av_frame = %d\n", return_value->value.lval, ff_frame->width, ff_frame->height, ff_frame->av_frame);
 
 #if PHP_VERSION_ID < 70000
 	return_value->type = IS_RESOURCE;
@@ -384,6 +381,34 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, toGDImage)
 	if (_php_avframe_to_gd_image(ff_frame->av_frame, gd_img,
 	            ff_frame->width, ff_frame->height)) {
 	    zend_error(E_ERROR, "failed to convert frame to gd image");
+	}
+	//__asm int 3;
+
+	if (1) {
+		zend_ulong numitems, i;
+		zend_resource *le;
+		numitems = zend_hash_next_free_element(&EG(regular_list));
+		array_init(return_value);
+		for (i=1; i<numitems; i++) {
+			if ((le = zend_hash_index_find_ptr(&EG(regular_list), i)) == NULL) {
+				continue;
+			}
+			add_index_long(return_value, i, (zend_long)le->ptr);
+			if (le->type == le_ffmpeg_frame) {
+				add_index_string(return_value, 10*i, "le_ffmpeg_frame");
+			} else if (le->type == 23) {
+				add_index_string(return_value, 10*i, "le->type == 23");
+			} else if (le->type == 26) {
+				add_index_string(return_value, 10*i, "le->type == 26");
+				gd_img = (gdImage *)(le->ptr);
+				add_index_long(return_value, 100*i, (zend_long)gd_img->red);
+				add_index_long(return_value, 1000*i, (zend_long)gd_img->green);
+				add_index_long(return_value, 10000*i, (zend_long)gd_img->blue);
+				add_index_long(return_value, 100000*i, (zend_long)gd_img->open);
+			} else {
+				add_index_long(return_value, 10*i, (zend_long)le->type);
+			}
+		}
 	}
 }
 /* }}} */
@@ -398,6 +423,7 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, ffmpeg_frame)
 	gdImage *gd_img;
 	ff_frame_context *ff_frame;
 	int width, height; //, ret;
+	zend_resource *ret;
 
 	if (ZEND_NUM_ARGS() != 1) {
 	    WRONG_PARAM_COUNT;
@@ -413,14 +439,13 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, ffmpeg_frame)
 	ff_frame = _php_alloc_ff_frame();
 
 #if PHP_VERSION_ID >= 70000
-	ff_frame->av_frame = zend_register_resource(ff_frame, le_ffmpeg_frame);
-	add_property_resource(getThis(), "ffmpeg_frame", ff_frame->av_frame);
+	ret = zend_register_resource(ff_frame, le_ffmpeg_frame);
+	add_property_resource(getThis(), "ffmpeg_frame", ret);
 #else
 	ret = ZEND_REGISTER_RESOURCE(NULL, ff_frame, le_ffmpeg_frame);
 	object_init_ex(getThis(), ffmpeg_frame_class_entry_ptr);
 	add_property_resource(getThis(), "ffmpeg_frame", ret);
 #endif
-
 
 //	switch (Z_TYPE_PP(argv[0])) {
 //	    case IS_STRING:
@@ -431,7 +456,7 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, ffmpeg_frame)
 //	        break;
 //	    case IS_RESOURCE:
 	        FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, &argv[0]);
-
+			__asm int 3;
 	        if (!gd_img->trueColor) {
 	            php_error_docref(NULL TSRMLS_CC, E_ERROR,
 	                    "First parameter must be a truecolor gd image.");

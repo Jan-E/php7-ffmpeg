@@ -1365,7 +1365,7 @@ static AVFrame* _php_get_av_frame(ff_movie_context *ffmovie_ctx,
     if (decoder_ctx == NULL) {
         return NULL;
     }
-	fprintf(stderr, "_php_get_av_frame ffmovie_ctx->frame_number = %d\n", ffmovie_ctx->frame_number);
+	//fprintf(stderr, "_php_get_av_frame ffmovie_ctx->frame_number = %d\n", ffmovie_ctx->frame_number);
 
     /* Rewind to the beginning of the stream if wanted frame already passed */
     if (wanted_frame > 0 && wanted_frame <= ffmovie_ctx->frame_number) {
@@ -1416,7 +1416,7 @@ static AVFrame* _php_get_av_frame(ff_movie_context *ffmovie_ctx,
             return frame;
         }
     }
-	fprintf(stderr, "_php_get_av_frame #2 ffmovie_ctx->frame_number = %d\n", ffmovie_ctx->frame_number);
+	//fprintf(stderr, "_php_get_av_frame #2 ffmovie_ctx->frame_number = %d\n", ffmovie_ctx->frame_number);
 
     av_free(frame);
     return NULL;
@@ -1436,7 +1436,7 @@ static int _php_get_ff_frame(ff_movie_context *ffmovie_ctx,
     ff_frame_context *ff_frame;
  
     frame = _php_get_av_frame(ffmovie_ctx, wanted_frame, &is_keyframe, &pts);
-	fprintf(stderr, "_php_get_ff_frame getThis() = %d\n", getThis());
+	//fprintf(stderr, "_php_get_ff_frame getThis() = %d\n", getThis());
     if (frame) { 
         /*
          * _php_create_ffmpeg_frame sets PHP return_value to a ffmpeg_frame
@@ -1467,6 +1467,7 @@ static int _php_get_ff_frame(ff_movie_context *ffmovie_ctx,
         av_picture_copy((AVPicture*)ff_frame->av_frame, 
                         (AVPicture*)frame, ff_frame->pixel_format,
                 ff_frame->width, ff_frame->height);
+		fprintf(stderr, "Called _php_create_ffmpeg_frame width = %d, height = %d, ff_frame->av_frame = %d\n", ff_frame->width, ff_frame->height, ff_frame->av_frame);
 
         return 1;
     } else {
@@ -1621,11 +1622,21 @@ PHP_FUNCTION(ffmpeg_movie_list)
 		if ((le = zend_hash_index_find_ptr(&EG(regular_list), i)) == NULL) {
 			continue;
 		}
-		if (le->type == le_ffmpeg_movie || le->type == le_ffmpeg_pmovie) {
+		if (le->type == le_ffmpeg_movie) {
 			ffmovie_ctx = (ff_movie_context *)(le->ptr);
 			//zend_hash_index_update(Z_ARRVAL_P(return_value), i, le->ptr);
 			add_index_long(return_value, i, (zend_long)le->ptr);
-			add_index_string(return_value, 10*i, ffmovie_ctx->fmt_ctx->filename);
+			add_index_long(return_value, 10*i, (zend_long)le->type);
+			add_index_string(return_value, 100*i, "le_ffmpeg_movie");
+			add_index_string(return_value, 1000*i, ffmovie_ctx->fmt_ctx->filename);
+		}
+		if (le->type == le_ffmpeg_pmovie) {
+			ffmovie_ctx = (ff_movie_context *)(le->ptr);
+			//zend_hash_index_update(Z_ARRVAL_P(return_value), i, le->ptr);
+			add_index_long(return_value, i, (zend_long)le->ptr);
+			add_index_long(return_value, 10*i, (zend_long)le->type);
+			add_index_string(return_value, 100*i, "le_ffmpeg_pmovie");
+			add_index_string(return_value, 1000*i, ffmovie_ctx->fmt_ctx->filename);
 		}
 	}
 }
