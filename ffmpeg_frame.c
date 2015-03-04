@@ -376,7 +376,11 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, toGDImage)
 	return_value->type = IS_RESOURCE;
 #endif
 
-	FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, return_value);
+//	FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, return_value);
+	ZEND_GET_RESOURCE_TYPE_ID(le_gd, "gd");
+	if ((gd_img = (gdImagePtr)zend_fetch_resource(Z_RES_P(return_value), "Image", le_gd)) == NULL) {
+		RETURN_FALSE;
+	}
 
 	if (_php_avframe_to_gd_image(ff_frame->av_frame, gd_img,
 	            ff_frame->width, ff_frame->height)) {
