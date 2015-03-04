@@ -370,7 +370,7 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, toGDImage)
 
 	//fprintf(stderr, "before toGDImage width = %d, height = %d, le->ptr = %d\n", ff_frame->width, ff_frame->height, le->ptr);
 	return_value->value.lval = _php_get_gd_image(ff_frame->width, ff_frame->height);
-	fprintf(stderr, "after  toGDImage return_value->value.lval = %d, width = %d, height = %d, ff_frame->av_frame = %d\n", return_value->value.lval, ff_frame->width, ff_frame->height, ff_frame->av_frame);
+	fprintf(stderr, "after  toGDImage return_value->value = %ld, width = %d, height = %d\n", return_value->value, ff_frame->width, ff_frame->height);
 
 #if PHP_VERSION_ID < 70000
 	return_value->type = IS_RESOURCE;
@@ -405,6 +405,8 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, toGDImage)
 				add_index_long(return_value, 1000*i, (zend_long)gd_img->green);
 				add_index_long(return_value, 10000*i, (zend_long)gd_img->blue);
 				add_index_long(return_value, 100000*i, (zend_long)gd_img->open);
+				RETURN_RES(le);
+				break;
 			} else {
 				add_index_long(return_value, 10*i, (zend_long)le->type);
 			}
