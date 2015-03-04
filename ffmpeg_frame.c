@@ -363,6 +363,7 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, toGDImage)
 {
 	ff_frame_context *ff_frame;
 	gdImage *gd_img;
+	zend_ulong gd_pointer;
 
 	GET_FRAME_RESOURCE(getThis(), ff_frame);
 
@@ -370,7 +371,8 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, toGDImage)
 
 	//fprintf(stderr, "before toGDImage width = %d, height = %d, le->ptr = %d\n", ff_frame->width, ff_frame->height, le->ptr);
 	return_value->value.lval = _php_get_gd_image(ff_frame->width, ff_frame->height);
-	fprintf(stderr, "after  toGDImage return_value->value = %ld, width = %d, height = %d\n", return_value->value, ff_frame->width, ff_frame->height);
+	gd_pointer = return_value->value.lval;
+	fprintf(stderr, "after  toGDImage gd_pointer = %ld, width = %d, height = %d\n", gd_pointer, ff_frame->width, ff_frame->height);
 
 #if PHP_VERSION_ID < 70000
 	return_value->type = IS_RESOURCE;
@@ -404,6 +406,7 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, toGDImage)
 				add_index_string(return_value, 10*i, "le->type == 23");
 			} else if (le->type == 26) {
 				add_index_string(return_value, 10*i, "le->type == 26");
+				fprintf(stderr, "after  toGDImage le->ptr = %ld\n", (long)le->ptr);
 				gd_img = (gdImage *)(le->ptr);
 				add_index_long(return_value, 100*i, (zend_long)gd_img->red);
 				add_index_long(return_value, 1000*i, (zend_long)gd_img->green);
