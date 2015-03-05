@@ -161,7 +161,6 @@ ff_frame_context* _php_create_ffmpeg_frame(INTERNAL_FUNCTION_PARAMETERS)
 	ret = zend_register_resource(ff_frame, le_ffmpeg_frame);
 	object_init_ex(return_value, ffmpeg_frame_class_entry_ptr);
 	add_property_resource(return_value, "ffmpeg_frame", ret);
-	fprintf(stderr, "_php_create_ffmpeg_frame return_value->value = %ld\n", return_value->value);
 #else
 	ret = ZEND_REGISTER_RESOURCE(NULL, ff_frame, le_ffmpeg_frame);
 	object_init_ex(return_value, ffmpeg_frame_class_entry_ptr);
@@ -277,31 +276,24 @@ static int _php_get_gd_image(int ww, int hh)
 	    zend_error(E_ERROR, "Error can't find %s function", "imagecreatetruecolor");
 	}
 
-//	fprintf(stderr, "_php_get_gd_image #1 Calling %s function %ld x %ld\n", "imagecreatetruecolor", ww, hh);
-
 	if (call_user_function_ex(EG(function_table), NULL, &gd_function_name, 
 			&retval, 2, gd_argv, 0, NULL) == SUCCESS && Z_TYPE(retval) != IS_UNDEF) {
 				/* hooray */
 	} else {
 	    zend_error(E_ERROR, "Error calling %s function", "imagecreatetruecolor");
 	}
-//	fprintf(stderr, "_php_get_gd_image #2 Calling %s function %ld x %ld\n", "imagecreatetruecolor", ww, hh);
 
 	if (Z_TYPE(retval) != IS_RESOURCE) {
-		fprintf(stderr, "_php_get_gd_image Error calling %s function %ld x %ld\n", "imagecreatetruecolor", ww, hh);
 	    php_error_docref(NULL TSRMLS_CC, E_ERROR,
 	            "Error creating GD Image");
 	}
 
 	ret = retval.value.lval;
 	// _zend_list_addref(ret);
-	// Z_ADDREF_P(&retval);
-	Z_RES_P(&retval)->gc.refcount++;
-//	if (&retval) {
-//		zval_ptr_dtor(&retval);
-//	}
-	fprintf(stderr, "_php_get_gd_image Called %s function %ld x %ld, ret = %ld\n", "imagecreatetruecolor", ww, hh, ret);
-//	__asm int 3; /* breakpoint */
+	Z_ADDREF_P(&retval);
+	if (&retval) {
+		zval_ptr_dtor(&retval);
+	}
 
 	return ret;
 }
@@ -320,8 +312,6 @@ static int _php_avframe_to_gd_image(AVFrame *frame, gdImage *dest, int width,
 
 	for (y = 0; y < height; y++) {
 	    for (x = 0; x < width; x++) {
-//	        /* copy pixel to gdimage buffer zeroing the alpha channel */
-//	        gdImageSetPixel(dest, x, y, src[x] & 0x00FFFFFF);
 			if (gdImageBoundsSafeMacro(dest, x, y)) {
                 /* copy pixel to gdimage buffer zeroing the alpha channel */
                 dest->tpixels[y][x] = src[x] & 0x00ffffff;
@@ -363,7 +353,6 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, toGDImage)
 {
 	ff_frame_context *ff_frame;
 	gdImage *gd_img;
-	zend_ulong gd_pointer;
 
 	GET_FRAME_RESOURCE(getThis(), ff_frame);
 
@@ -371,26 +360,21 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, toGDImage)
 
 	//fprintf(stderr, "before toGDImage width = %d, height = %d, le->ptr = %d\n", ff_frame->width, ff_frame->height, le->ptr);
 	return_value->value.lval = _php_get_gd_image(ff_frame->width, ff_frame->height);
-	gd_pointer = return_value->value.lval;
-	fprintf(stderr, "after  toGDImage gd_pointer = %ld, width = %d, height = %d\n", gd_pointer, ff_frame->width, ff_frame->height);
+	//fprintf(stderr, "after  toGDImage return_value->value.lval = %ld, Z_PTR_P(return_value) = %ld\n", return_value->value.lval, Z_PTR_P(return_value));
 
 #if PHP_VERSION_ID < 70000
 	return_value->type = IS_RESOURCE;
 #endif
 
-//	FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, return_value);
-	ZEND_GET_RESOURCE_TYPE_ID(le_gd, "gd");
-	if ((gd_img = (gdImagePtr)zend_fetch_resource(Z_RES_P(return_value), "Image", le_gd)) == NULL) {
-		RETURN_FALSE;
-	}
+	FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, return_value);
 
 	if (_php_avframe_to_gd_image(ff_frame->av_frame, gd_img,
 	            ff_frame->width, ff_frame->height)) {
 	    zend_error(E_ERROR, "failed to convert frame to gd image");
 	}
-	//__asm int 3;
+	RETURN_RES(Z_PTR_P(return_value));
 
-	if (1) {
+	if (0) {
 		zend_ulong numitems, i;
 		zend_resource *le;
 		numitems = zend_hash_next_free_element(&EG(regular_list));
@@ -412,8 +396,8 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, toGDImage)
 				add_index_long(return_value, 1000*i, (zend_long)gd_img->green);
 				add_index_long(return_value, 10000*i, (zend_long)gd_img->blue);
 				add_index_long(return_value, 100000*i, (zend_long)gd_img->open);
-				RETURN_RES(le);
-				break;
+				//RETURN_RES(le);
+				//break;
 			} else {
 				add_index_long(return_value, 10*i, (zend_long)le->type);
 			}

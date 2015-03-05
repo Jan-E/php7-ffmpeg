@@ -171,7 +171,6 @@ static ff_movie_context* _php_get_ffmovie_ctx()
 		}
 		if (le->type == le_ffmpeg_movie || le->type == le_ffmpeg_pmovie) {
 			ffmovie_ctx = (ff_movie_context *)(le->ptr);
-			//fprintf(stderr, "_php_get_ffmovie_ctx ffmovie_ctx->rsrc_id = %d, le->ptr = %d\n", ffmovie_ctx->rsrc_id, le->ptr);
 			return ffmovie_ctx;
 		}
 	}
@@ -488,8 +487,6 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
     object_init_ex(getThis(), ffmpeg_movie_class_entry_ptr);
     add_property_resource(getThis(), "ffmpeg_movie", ffmovie_ctx->rsrc_id);
 #endif
-//	fprintf(stderr, "ffmovie_ctx = %d, ffmovie_ctx->rsrc_id = %d, filename = %s, return_value = %d, getThis() = %d\n",
-//		ffmovie_ctx, ffmovie_ctx->rsrc_id, ffmovie_ctx->fmt_ctx->filename, return_value, getThis());
 
     efree(argv);
     if (fullpath) {
@@ -766,16 +763,9 @@ static float _php_get_duration(ff_movie_context *ffmovie_ctx)
 FFMPEG_PHP_METHOD(ffmpeg_movie, getDuration)
 {
     ff_movie_context *ffmovie_ctx;  
-//	zend_resource *le;
 	
     GET_MOVIE_RESOURCE(ffmovie_ctx);
-//	if ((le = zend_hash_str_find_ptr(Z_OBJPROP_P(getThis()), "ffmpeg_movie", sizeof("ffmpeg_movie")-1)) == NULL) {
-//		zend_error(E_WARNING, "Invalid ffmpeg_movie object");
-//		RETURN_FALSE;
-//	} else {
-//		ffmovie_ctx = (ff_movie_context *)(le->ptr);
-//	}
-//	fprintf(stderr, "getDuration return_value = %d, getThis() = %d\n", return_value, getThis());
+
     RETURN_DOUBLE(_php_get_duration(ffmovie_ctx));
 }
 /* }}} */
@@ -1365,7 +1355,6 @@ static AVFrame* _php_get_av_frame(ff_movie_context *ffmovie_ctx,
     if (decoder_ctx == NULL) {
         return NULL;
     }
-	//fprintf(stderr, "_php_get_av_frame ffmovie_ctx->frame_number = %d\n", ffmovie_ctx->frame_number);
 
     /* Rewind to the beginning of the stream if wanted frame already passed */
     if (wanted_frame > 0 && wanted_frame <= ffmovie_ctx->frame_number) {
@@ -1416,7 +1405,6 @@ static AVFrame* _php_get_av_frame(ff_movie_context *ffmovie_ctx,
             return frame;
         }
     }
-	//fprintf(stderr, "_php_get_av_frame #2 ffmovie_ctx->frame_number = %d\n", ffmovie_ctx->frame_number);
 
     av_free(frame);
     return NULL;
@@ -1436,7 +1424,6 @@ static int _php_get_ff_frame(ff_movie_context *ffmovie_ctx,
     ff_frame_context *ff_frame;
  
     frame = _php_get_av_frame(ffmovie_ctx, wanted_frame, &is_keyframe, &pts);
-	//fprintf(stderr, "_php_get_ff_frame getThis() = %d\n", getThis());
     if (frame) { 
         /*
          * _php_create_ffmpeg_frame sets PHP return_value to a ffmpeg_frame
@@ -1467,7 +1454,6 @@ static int _php_get_ff_frame(ff_movie_context *ffmovie_ctx,
         av_picture_copy((AVPicture*)ff_frame->av_frame, 
                         (AVPicture*)frame, ff_frame->pixel_format,
                 ff_frame->width, ff_frame->height);
-		fprintf(stderr, "Called _php_create_ffmpeg_frame width = %d, height = %d, ff_frame->av_frame = %d\n", ff_frame->width, ff_frame->height, ff_frame->av_frame);
 
         return 1;
     } else {
