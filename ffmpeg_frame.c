@@ -449,7 +449,6 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, ffmpeg_frame)
 //	        break;
 //	    case IS_RESOURCE:
 	        FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, &argv[0]);
-			__asm int 3;
 	        if (!gd_img->trueColor) {
 	            php_error_docref(NULL TSRMLS_CC, E_ERROR,
 	                    "First parameter must be a truecolor gd image.");
