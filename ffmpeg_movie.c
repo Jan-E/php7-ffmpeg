@@ -59,7 +59,6 @@
 #include "ffmpeg_movie.h"
 #include "ffmpeg_tools.h"
    
-#if PHP_VERSION_ID >= 70000
 #define GET_MOVIE_RESOURCE(ffmovie_ctx) {\
     zend_resource *le;\
 	if ((le = zend_hash_str_find_ptr(Z_OBJPROP_P(getThis()), "ffmpeg_movie", sizeof("ffmpeg_movie")-1)) == NULL) {\
@@ -70,19 +69,6 @@
     }\
 \
 }
-#else
-#define GET_MOVIE_RESOURCE(ffmovie_ctx) {\
-    zval **_tmp_zval;\
-    if (zend_hash_find(Z_OBJPROP_P(getThis()), "ffmpeg_movie",\
-                sizeof("ffmpeg_movie"), (void **)&_tmp_zval) == FAILURE) {\
-        zend_error(E_WARNING, "Invalid ffmpeg_movie object");\
-        RETURN_FALSE;\
-    }\
-\
-    ZEND_FETCH_RESOURCE2(ff_movie_ctx, ff_movie_context*, _tmp_zval, -1,\
-            "ffmpeg_movie", le_ffmpeg_movie, le_ffmpeg_pmovie);\
-}
-#endif
 #define LRINT(x) ((long) ((x)+0.5))
 
 #if LIBAVFORMAT_BUILD > 4628
@@ -98,11 +84,7 @@ typedef struct {
     AVCodecContext *codec_ctx[MAX_STREAMS];
     int64_t last_pts;
     int frame_number;
-#if PHP_VERSION_ID >= 70000
     zend_resource *rsrc_id;
-#else
-    long rsrc_id;
-#endif
 } ff_movie_context;
 
 static zend_class_entry *ffmpeg_movie_class_entry_ptr;
@@ -332,7 +314,6 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
 	char *key = NULL, *error = NULL;
 	int keylen = 0;
 	int i;
-	//zend_resource new_le;
 
 	/* we pass additional args to the respective handler */
 	argv = (zval *)safe_emalloc(sizeof(zval), ac, 0);
@@ -373,11 +354,7 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
     } 
 
 //	    if (persistent) {
-//	#if PHP_VERSION_ID >= 70000
 //		zend_resource *le;
-//	#else
-//		zend_rsrc_list_entry *le;
-//	#endif
 //	        /* resolve the fully-qualified path name to use as the hash key */
 //	        fullpath = expand_filepath(filename, NULL TSRMLS_CC);
 //	
@@ -407,21 +384,12 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
 //	            } else {
 //	                //php_error_docref(NULL TSRMLS_CC, E_ERROR, 
 //	                //"Not a valid persistent movie resource");
-//	#if PHP_VERSION_ID >= 70000
 //	                ffmovie_ctx->rsrc_id = zend_register_resource( 
 //	                        ffmovie_ctx, le_ffmpeg_pmovie);
-//	#else
-//	                ffmovie_ctx->rsrc_id = ZEND_REGISTER_RESOURCE(NULL, 
-//	                        ffmovie_ctx, le_ffmpeg_pmovie);
-//	#endif
 //	            }
 //	            
 //	        } else { /* no existing persistant movie, create one */
-//	#if PHP_VERSION_ID >= 70000
 //				zend_resource new_le;
-//	#else
-//	            zend_rsrc_list_entry new_le;
-//	#endif
 //	            ffmovie_ctx = _php_alloc_ffmovie_ctx(1);
 //	
 //	            if (_php_open_movie_file(ffmovie_ctx, filename)) {
@@ -431,32 +399,18 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
 //	                RETURN_FALSE;
 //	            }
 //	
-//	#if PHP_VERSION_ID < 70000
-//	            Z_TYPE(new_le) = le_ffmpeg_pmovie;
-//	#endif
 //	            new_le.ptr = ffmovie_ctx;
 //	
-//	#if PHP_VERSION_ID >= 70000
 //	            if (FAILURE == zend_hash_update(&EG(persistent_list), hashkey, 
 //	                        hashkey_length+1, (void *)&new_le, sizeof(zend_resource),
 //	                        NULL))
-//	#else
-//	            if (FAILURE == zend_hash_update(&EG(persistent_list), hashkey, 
-//	                        hashkey_length+1, (void *)&new_le, sizeof(zend_rsrc_list_entry),
-//	                        NULL))
-//	#endif
 //				{
 //							php_error_docref(NULL TSRMLS_CC, E_WARNING, 
 //	                        "Failed to register persistent resource");
 //	            }
 //	            
-//	#if PHP_VERSION_ID >= 70000
 //	            ffmovie_ctx->rsrc_id = zend_register_resource(ffmovie_ctx, 
 //	                    le_ffmpeg_pmovie);
-//	#else
-//	            ffmovie_ctx->rsrc_id = ZEND_REGISTER_RESOURCE(NULL, ffmovie_ctx, 
-//	                    le_ffmpeg_pmovie);
-//	#endif
 //	        }
 //	        
 //	    } else {
@@ -470,23 +424,11 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
             RETURN_FALSE;
         }
         
-#if PHP_VERSION_ID >= 70000
         ffmovie_ctx->rsrc_id = zend_register_resource(ffmovie_ctx, 
                 le_ffmpeg_movie);
-#else
-        /* pass NULL for resource result since we're not returning the resource
-           directly, but adding it to the returned object. */
-        ffmovie_ctx->rsrc_id = ZEND_REGISTER_RESOURCE(NULL, ffmovie_ctx, 
-                le_ffmpeg_movie);
-#endif
 //	    }
 
-#if PHP_VERSION_ID >= 70000
     add_property_resource(getThis(), "ffmpeg_movie", ffmovie_ctx->rsrc_id);
-#else
-    object_init_ex(getThis(), ffmpeg_movie_class_entry_ptr);
-    add_property_resource(getThis(), "ffmpeg_movie", ffmovie_ctx->rsrc_id);
-#endif
 
     efree(argv);
     if (fullpath) {
@@ -500,11 +442,7 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
 
 /* {{{ _php_free_ffmpeg_movie
  */
-#if PHP_VERSION_ID >= 70000
 static void _php_free_ffmpeg_movie(zend_resource *rsrc TSRMLS_DC)
-#else
-static void _php_free_ffmpeg_movie(zend_rsrc_list_entry *rsrc TSRMLS_DC)
-#endif
 {
     int i;
     ff_movie_context *ffmovie_ctx = (ff_movie_context*)rsrc->ptr;    
@@ -527,11 +465,7 @@ static void _php_free_ffmpeg_movie(zend_rsrc_list_entry *rsrc TSRMLS_DC)
 
 /* {{{ _php_free_ffmpeg_pmovie
  */
-#if PHP_VERSION_ID >= 70000
 static void _php_free_ffmpeg_pmovie(zend_resource *rsrc TSRMLS_DC)
-#else
-static void _php_free_ffmpeg_pmovie(zend_rsrc_list_entry *rsrc TSRMLS_DC)
-#endif
 {
     /* TODO: Factor into a single free function for pmovie and movie */
     int i;
@@ -1610,7 +1544,6 @@ PHP_FUNCTION(ffmpeg_movie_list)
 		}
 		if (le->type == le_ffmpeg_movie) {
 			ffmovie_ctx = (ff_movie_context *)(le->ptr);
-			//zend_hash_index_update(Z_ARRVAL_P(return_value), i, le->ptr);
 			add_index_long(return_value, i, (zend_long)le->ptr);
 			add_index_long(return_value, 10*i, (zend_long)le->type);
 			add_index_string(return_value, 100*i, "le_ffmpeg_movie");
@@ -1618,7 +1551,6 @@ PHP_FUNCTION(ffmpeg_movie_list)
 		}
 		if (le->type == le_ffmpeg_pmovie) {
 			ffmovie_ctx = (ff_movie_context *)(le->ptr);
-			//zend_hash_index_update(Z_ARRVAL_P(return_value), i, le->ptr);
 			add_index_long(return_value, i, (zend_long)le->ptr);
 			add_index_long(return_value, 10*i, (zend_long)le->type);
 			add_index_string(return_value, 100*i, "le_ffmpeg_pmovie");

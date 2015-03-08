@@ -60,25 +60,18 @@
 
 /* 
    include gd header from local include dir. This is a copy of gd.h that is 
-   distributed with php-5.2.5. It is distributed along with ffmpeg-php to
+   distributed with php7. It is distributed along with ffmpeg-php to
    allow ffmpeg-php to be built without access to the php sources
    */
 #if HAVE_LIBGD20
 #include "gd.h" 
 
-#if PHP_VERSION_ID >= 70000
 #define FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, ret) { \
 	ZEND_GET_RESOURCE_TYPE_ID(le_gd, "gd"); \
 	if ((gd_img = (gdImagePtr)zend_fetch_resource(Z_RES_P(ret), "Image", le_gd)) == NULL) {\
 		RETURN_FALSE;\
 	}\
 }
-#else
-#define FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, ret) { \
-	ZEND_GET_RESOURCE_TYPE_ID(le_gd, "gd"); \
-	ZEND_FETCH_RESOURCE(gd_img, gdImagePtr, ret, -1, "Image", le_gd); \
-}
-#endif
 
 #if PIX_FMT_RGBA32
 #define FFMPEG_PHP_FFMPEG_RGB_PIX_FORMAT PIX_FMT_RGBA32
@@ -157,15 +150,9 @@ ff_frame_context* _php_create_ffmpeg_frame(INTERNAL_FUNCTION_PARAMETERS)
 
 	ff_frame = _php_alloc_ff_frame();
 
-#if PHP_VERSION_ID >= 70000
 	ret = zend_register_resource(ff_frame, le_ffmpeg_frame);
 	object_init_ex(return_value, ffmpeg_frame_class_entry_ptr);
 	add_property_resource(return_value, "ffmpeg_frame", ret);
-#else
-	ret = ZEND_REGISTER_RESOURCE(NULL, ff_frame, le_ffmpeg_frame);
-	object_init_ex(return_value, ffmpeg_frame_class_entry_ptr);
-	add_property_resource(return_value, "ffmpeg_frame", ret);
-#endif
 
 	return ff_frame;
 }
@@ -189,11 +176,7 @@ static void _php_free_av_frame(AVFrame *av_frame)
 
 /* {{{ _php_free_ffmpeg_frame()
 */
-#if PHP_VERSION_ID >= 70000
 static void _php_free_ffmpeg_frame(zend_resource *rsrc TSRMLS_DC)
-#else
-static void _php_free_ffmpeg_frame(zend_rsrc_list_entry *rsrc TSRMLS_DC)
-#endif
 {
 	ff_frame_context *ff_frame = (ff_frame_context*)rsrc->ptr;    
 	_php_free_av_frame(ff_frame->av_frame);
@@ -289,7 +272,6 @@ static int _php_get_gd_image(int ww, int hh)
 	}
 
 	ret = retval.value.lval;
-	// _zend_list_addref(ret);
 	Z_ADDREF_P(&retval);
 	if (&retval) {
 		zval_ptr_dtor(&retval);
@@ -316,9 +298,6 @@ static int _php_avframe_to_gd_image(AVFrame *frame, gdImage *dest, int width,
                 /* copy pixel to gdimage buffer zeroing the alpha channel */
                 dest->tpixels[y][x] = src[x] & 0x00ffffff;
             } else {
-#ifndef _WIN64 // [
-				__asm int 3; /* breakpoint */
-#endif  // _WIN64 ]
                 return -1;
             }
 	    }
@@ -361,10 +340,6 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, toGDImage)
 	//fprintf(stderr, "before toGDImage width = %d, height = %d, le->ptr = %d\n", ff_frame->width, ff_frame->height, le->ptr);
 	return_value->value.lval = _php_get_gd_image(ff_frame->width, ff_frame->height);
 	//fprintf(stderr, "after  toGDImage return_value->value.lval = %ld, Z_PTR_P(return_value) = %ld\n", return_value->value.lval, Z_PTR_P(return_value));
-
-#if PHP_VERSION_ID < 70000
-	return_value->type = IS_RESOURCE;
-#endif
 
 	FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, return_value);
 
@@ -415,7 +390,7 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, ffmpeg_frame)
 	AVFrame *frame;
 	gdImage *gd_img;
 	ff_frame_context *ff_frame;
-	int width, height; //, ret;
+	int width, height;
 	zend_resource *ret;
 
 	if (ZEND_NUM_ARGS() != 1) {
@@ -431,14 +406,8 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, ffmpeg_frame)
 
 	ff_frame = _php_alloc_ff_frame();
 
-#if PHP_VERSION_ID >= 70000
 	ret = zend_register_resource(ff_frame, le_ffmpeg_frame);
 	add_property_resource(getThis(), "ffmpeg_frame", ret);
-#else
-	ret = ZEND_REGISTER_RESOURCE(NULL, ff_frame, le_ffmpeg_frame);
-	object_init_ex(getThis(), ffmpeg_frame_class_entry_ptr);
-	add_property_resource(getThis(), "ffmpeg_frame", ret);
-#endif
 
 //	switch (Z_TYPE_PP(argv[0])) {
 //	    case IS_STRING:
