@@ -281,7 +281,7 @@ static int _php_get_gd_image(int ww, int hh)
 }
 /* }}} */
 
-// Borrowed from ffmpeg-r10461-include
+// Borrowed from gd.h
 #define gdImageBoundsSafeMacro(im, x, y) (!((((y) < (im)->cy1) || ((y) > (im)->cy2)) || (((x) < (im)->cx1) || ((x) > (im)->cx2))))
 
 /* {{{ _php_avframe_to_gd_image()
@@ -292,6 +292,11 @@ static int _php_avframe_to_gd_image(AVFrame *frame, gdImage *dest, int width,
 	int x, y;
 	int *src = (int*)frame->data[0];
 
+	// Borrowed from https://github.com/tony2001/ffmpeg-php/commit/23174b4
+	if (width > dest->sx || height > dest->sy) {
+		return -1;
+	}
+	
 	for (y = 0; y < height; y++) {
 	    for (x = 0; x < width; x++) {
 			if (gdImageBoundsSafeMacro(dest, x, y)) {
