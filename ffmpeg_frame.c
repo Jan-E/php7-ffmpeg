@@ -318,7 +318,6 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, toGDImage)
 
 	FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, return_value);
 
-	gdImageSetClip(gd_img, 0, 0, gd_img->sx, gd_img->sy);
 	if (_php_avframe_to_gd_image(ff_frame->av_frame, gd_img,
 	            ff_frame->width, ff_frame->height)) {
 	    zend_error(E_ERROR, "failed to convert frame to gd image");
