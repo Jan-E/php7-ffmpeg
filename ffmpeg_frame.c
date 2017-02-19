@@ -325,46 +325,13 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, toGDImage)
 
 	_php_convert_frame(ff_frame, FFMPEG_PHP_FFMPEG_RGB_PIX_FORMAT);
 
-	//fprintf(stderr, "before toGDImage width = %d, height = %d, le->ptr = %d\n", ff_frame->width, ff_frame->height, le->ptr);
 	_php_get_gd_image(return_value, ff_frame->width, ff_frame->height);
-	//fprintf(stderr, "after  toGDImage return_value->value.lval = %ld, Z_PTR_P(return_value) = %ld\n", return_value->value.lval, Z_PTR_P(return_value));
 
 	FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, return_value);
 
-	//gdImageSetClip(gd_img, 0, 0, gd_img->sx, gd_img->sy);
 	if (_php_avframe_to_gd_image(ff_frame->av_frame, gd_img,
 	            ff_frame->width, ff_frame->height)) {
 	    zend_error(E_ERROR, "failed to convert frame to gd image");
-	}
-
-	if (0) {
-		zend_ulong numitems, i;
-		zend_resource *le;
-		numitems = zend_hash_next_free_element(&EG(regular_list));
-		array_init(return_value);
-		for (i=1; i<numitems; i++) {
-			if ((le = zend_hash_index_find_ptr(&EG(regular_list), i)) == NULL) {
-				continue;
-			}
-			add_index_long(return_value, i, (zend_long)le->ptr);
-			if (le->type == le_ffmpeg_frame) {
-				add_index_string(return_value, 10*i, "le_ffmpeg_frame");
-			} else if (le->type == 23) {
-				add_index_string(return_value, 10*i, "le->type == 23");
-			} else if (le->type == 26) {
-				add_index_string(return_value, 10*i, "le->type == 26");
-				fprintf(stderr, "after  toGDImage le->ptr = %ld\n", (long)le->ptr);
-				gd_img = (gdImage *)(le->ptr);
-				add_index_long(return_value, 100*i, (zend_long)gd_img->red);
-				add_index_long(return_value, 1000*i, (zend_long)gd_img->green);
-				add_index_long(return_value, 10000*i, (zend_long)gd_img->blue);
-				add_index_long(return_value, 100000*i, (zend_long)gd_img->open);
-				//RETURN_RES(le);
-				//break;
-			} else {
-				add_index_long(return_value, 10*i, (zend_long)le->type);
-			}
-		}
 	}
 }
 /* }}} */
