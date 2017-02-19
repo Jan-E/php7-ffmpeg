@@ -124,15 +124,16 @@ if test "$PHP_FFMPEG" != "no"; then
 
   if test -z "$LIBGD_INCDIR"; then
     AC_MSG_RESULT([not found])
-    AC_MSG_ERROR([Please reinstall libgd])
+    AC_MSG_ERROR([Please install libgd])
   else
     AC_MSG_RESULT(found in $LIBGD_INCDIR)
+	dnl usual suspect: --with-libgd-incdir=/usr/local/php71/include/php/ext/gd/libgd
   fi
 
   CFLAGS="$CFLAGS -Wall -fno-strict-aliasing"
 
   PHP_NEW_EXTENSION(ffmpeg, ffmpeg-php.c ffmpeg_movie.c ffmpeg_frame.c ffmpeg_errorhandler.c ffmpeg_tools.c, $ext_shared,, \\$(GDLIB_CFLAGS))
-dnl PHP_ADD_EXTENSION_DEP(ffmpeg, gd)
+  dnl PHP_ADD_EXTENSION_DEP(ffmpeg, gd)
 
   PHP_SUBST(FFMPEG_SHARED_LIBADD)
   AC_DEFINE(HAVE_FFMPEG_PHP,1,[ ])
