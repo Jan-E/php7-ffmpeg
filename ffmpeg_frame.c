@@ -241,13 +241,12 @@ int _php_convert_frame(ff_frame_context *ff_frame, int dst_fmt) {
 
 /* {{{ _php_get_gd_image()
 */
-static int _php_get_gd_image(int ww, int hh)
+static void
+_php_get_gd_image(zval *retval, int ww, int hh)
 {
 	zval gd_function_name;
 	zval gd_argv[2]; /* borrowed from php_pcre.c */
 	zend_function *gd_func;
-	zval retval;
-	zend_long ret;
 	TSRMLS_FETCH();
 
 	array_init_size(&gd_argv[0], 2);
@@ -260,29 +259,22 @@ static int _php_get_gd_image(int ww, int hh)
 	}
 
 	if (call_user_function_ex(EG(function_table), NULL, &gd_function_name, 
-			&retval, 2, gd_argv, 0, NULL) == SUCCESS && Z_TYPE(retval) != IS_UNDEF) {
+			retval, 2, gd_argv, 0, NULL) == SUCCESS && Z_TYPE(*retval) != IS_UNDEF) {
 				/* hooray */
 	} else {
 	    zend_error(E_ERROR, "Error calling %s function", "imagecreatetruecolor");
 	}
 
-	if (Z_TYPE(retval) != IS_RESOURCE) {
+	if (Z_TYPE(*retval) != IS_RESOURCE) {
 	    php_error_docref(NULL TSRMLS_CC, E_ERROR,
 	            "Error creating GD Image");
 	}
 
-	ret = retval.value.lval;
-	Z_ADDREF_P(&retval);
-	if (&retval) {
-		zval_ptr_dtor(&retval);
-	}
-
-	return ret;
+	Z_ADDREF_P(retval);
+	zval_ptr_dtor(retval);
 }
 /* }}} */
 
-// Borrowed from gd.h
-#define gdImageBoundsSafeMacro(im, x, y) (!((((y) < (im)->cy1) || ((y) > (im)->cy2)) || (((x) < (im)->cx1) || ((x) > (im)->cx2))))
 
 /* {{{ _php_avframe_to_gd_image()
 */
@@ -299,12 +291,7 @@ static int _php_avframe_to_gd_image(AVFrame *frame, gdImage *dest, int width,
 	
 	for (y = 0; y < height; y++) {
 	    for (x = 0; x < width; x++) {
-			if (gdImageBoundsSafeMacro(dest, x, y)) {
-                /* copy pixel to gdimage buffer zeroing the alpha channel */
-                dest->tpixels[y][x] = src[x] & 0x00ffffff;
-            } else {
-                return -1;
-            }
+			dest->tpixels[y][x] = src[x] & 0x00ffffff;
 	    }
 	    src += width;
 	}
@@ -343,16 +330,16 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, toGDImage)
 	_php_convert_frame(ff_frame, FFMPEG_PHP_FFMPEG_RGB_PIX_FORMAT);
 
 	//fprintf(stderr, "before toGDImage width = %d, height = %d, le->ptr = %d\n", ff_frame->width, ff_frame->height, le->ptr);
-	return_value->value.lval = _php_get_gd_image(ff_frame->width, ff_frame->height);
+	_php_get_gd_image(return_value, ff_frame->width, ff_frame->height);
 	//fprintf(stderr, "after  toGDImage return_value->value.lval = %ld, Z_PTR_P(return_value) = %ld\n", return_value->value.lval, Z_PTR_P(return_value));
 
 	FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, return_value);
 
+	//gdImageSetClip(gd_img, 0, 0, gd_img->sx, gd_img->sy);
 	if (_php_avframe_to_gd_image(ff_frame->av_frame, gd_img,
 	            ff_frame->width, ff_frame->height)) {
 	    zend_error(E_ERROR, "failed to convert frame to gd image");
 	}
-	RETURN_RES(Z_PTR_P(return_value));
 
 	if (0) {
 		zend_ulong numitems, i;
