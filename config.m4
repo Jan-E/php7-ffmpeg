@@ -3,6 +3,9 @@ PHP_ARG_WITH(ffmpeg,for ffmpeg support,
 
 PHP_ARG_ENABLE(skip-gd-check, whether to force gd support in ffmpeg-php, [  --enable-skip-gd-check     skip checks for gd libs and assume they are present.], no, no)
 
+PHP_ARG_WITH(libgd-incdir, C include dir for libgd,
+[  --with-libgd-incdir[=DIR] Include path for the C headers of libgd])
+
 if test "$PHP_SKIP_GD_CHECK" != "no"; then
     AC_DEFINE(HAVE_LIBGD20, 1, [Define to 1 if the GD functions are available in php])
 fi
@@ -101,6 +104,29 @@ if test "$PHP_FFMPEG" != "no"; then
   else
       dnl Ignore deprecation warnings that using img_convert generates these days
       CFLAGS="$CFLAGS -Wno-deprecated-declarations"
+  fi
+
+  SEARCH_PATH="/usr/local /usr"
+  SEARCH_FOR="gd.h"
+
+  AC_MSG_CHECKING([for libgd includes])
+  if test -r "$PHP_LIBGD_INCDIR/include/$SEARCH_FOR"; then
+    LIBGD_INCDIR=$PHP_LIBGD_INCDIR/include
+  elif test -r "$PHP_LIBGD_INCDIR/$SEARCH_FOR"; then
+    LIBGD_INCDIR=$PHP_LIBGD_INCDIR
+  else # search default path list
+    for i in $SEARCH_PATH ; do
+      if test -r "$i/include/$SEARCH_FOR"; then
+        LIBGD_INCDIR=$i/include
+      fi
+    done
+  fi
+
+  if test -z "$LIBGD_INCDIR"; then
+    AC_MSG_RESULT([not found])
+    AC_MSG_ERROR([Please reinstall libgd])
+  else
+    AC_MSG_RESULT(found in $LIBGD_INCDIR)
   fi
 
   CFLAGS="$CFLAGS -Wall -fno-strict-aliasing"
