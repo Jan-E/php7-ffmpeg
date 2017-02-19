@@ -1,14 +1,8 @@
 PHP_ARG_WITH(ffmpeg,for ffmpeg support, 
 [  --with-ffmpeg[=DIR]       Include ffmpeg support (requires ffmpeg >= 0.5).])
 
-PHP_ARG_ENABLE(skip-gd-check, whether to force gd support in ffmpeg-php, [  --enable-skip-gd-check     skip checks for gd libs and assume they are present.], no, no)
-
 PHP_ARG_WITH(libgd-incdir, C include dir for libgd,
 [  --with-libgd-incdir[=DIR] Include path for the C headers of libgd])
-
-if test "$PHP_SKIP_GD_CHECK" != "no"; then
-    AC_DEFINE(HAVE_LIBGD20, 1, [Define to 1 if the GD functions are available in php])
-fi
 
 dnl Determine path to ffmpeg libs
 if test "$PHP_FFMPEG" != "no"; then
