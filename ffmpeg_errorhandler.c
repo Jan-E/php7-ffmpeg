@@ -33,8 +33,9 @@
 
  */
 
-#include "php.h"
+#include <php.h>
 #include <avcodec.h>
+#include "ffmpeg_errorhandler.h"
 
 /* {{{ ffmpeg_errorhandler()
  */

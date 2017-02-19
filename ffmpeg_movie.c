@@ -36,6 +36,7 @@
 
 #include <avcodec.h>
 #include <avformat.h>
+#include <libavutil/pixdesc.h>
 
 #ifndef CODEC_TYPE_VIDEO
 #define CodecType AVMediaType
@@ -136,28 +137,6 @@ zend_function_entry ffmpeg_movie_class_methods[] = {
 
     FFMPEG_PHP_END_METHODS
 };
-/* }}} */
-
-/* {{{ _php_get_ffmovie_ctx()
- */
-static ff_movie_context* _php_get_ffmovie_ctx()
-{
-	zend_ulong numitems, i;
-	zend_resource *le;
-    ff_movie_context *ffmovie_ctx;
-	
-	numitems = zend_hash_next_free_element(&EG(regular_list));
-	for (i=1; i<numitems; i++) {
-		if ((le = zend_hash_index_find_ptr(&EG(regular_list), i)) == NULL) {
-			continue;
-		}
-		if (le->type == le_ffmpeg_movie || le->type == le_ffmpeg_pmovie) {
-			ffmovie_ctx = (ff_movie_context *)(le->ptr);
-			return ffmovie_ctx;
-		}
-	}
-	return 0;
-}
 /* }}} */
 
 /* {{{ _php_get_stream_index()
@@ -281,20 +260,20 @@ static void _php_print_av_error(const char *filename, int err)
 /* {{{ _php_open_movie_file()
  */
 static int _php_open_movie_file(ff_movie_context *ffmovie_ctx, 
-        char* filename)
+        const char* filename)
 {
     if (ffmovie_ctx->fmt_ctx) {
-        av_close_input_file(ffmovie_ctx->fmt_ctx);
+        avformat_close_input(&ffmovie_ctx->fmt_ctx);
         ffmovie_ctx->fmt_ctx = NULL;
     }
     
     /* open the file with generic libav function */
-    if (av_open_input_file(&ffmovie_ctx->fmt_ctx, filename, NULL, 0, NULL) < 0) {
+    if (avformat_open_input(&ffmovie_ctx->fmt_ctx, filename, NULL, NULL) < 0) {
         return 1;
     }
 
     /* decode the first frames to get the stream parameters. */
-    av_find_stream_info(ffmovie_ctx->fmt_ctx);
+    avformat_find_stream_info(ffmovie_ctx->fmt_ctx, NULL);
 
     return 0;
 }
@@ -340,6 +319,8 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
             if (! INI_BOOL("ffmpeg.allow_persistent") && Z_STRVAL(argv[1])) {
                 zend_error(E_WARNING, 
                         "Persistent movies have been disabled in php.ini");
+                ZVAL_BOOL(getThis(), 0);
+                RETURN_FALSE;
                 break;
             } 
 
@@ -456,7 +437,7 @@ static void _php_free_ffmpeg_movie(zend_resource *rsrc TSRMLS_DC)
         }
     }
 
-    av_close_input_file(ffmovie_ctx->fmt_ctx);
+    avformat_close_input(&ffmovie_ctx->fmt_ctx);
 
     efree(ffmovie_ctx);
 }
@@ -480,7 +461,7 @@ static void _php_free_ffmpeg_pmovie(zend_resource *rsrc TSRMLS_DC)
         }
     }
 
-    av_close_input_file(ffmovie_ctx->fmt_ctx);
+    avformat_close_input(&ffmovie_ctx->fmt_ctx);
 
     free(ffmovie_ctx);
 }
@@ -543,7 +524,7 @@ static AVCodecContext* _php_get_decoder_context(ff_movie_context *ffmovie_ctx,
                     codec_id));
 
         if (!decoder) {
-            zend_error(E_ERROR, "Could not find decoder for %s", 
+            zend_error(E_WARNING, "Could not find decoder for %s", 
                     _php_get_filename(ffmovie_ctx));
             return NULL;
         }
@@ -552,7 +533,7 @@ static AVCodecContext* _php_get_decoder_context(ff_movie_context *ffmovie_ctx,
             GET_CODEC_PTR(ffmovie_ctx->fmt_ctx->streams[stream_index]->codec);
 
        /* open the decoder */
-        if (avcodec_open(ffmovie_ctx->codec_ctx[stream_index], decoder) < 0) {
+        if (avcodec_open2(ffmovie_ctx->codec_ctx[stream_index], decoder, NULL) < 0) {
             zend_error(E_WARNING, "Could not open codec for %s", _php_get_filename(ffmovie_ctx));
             return NULL;
         }
@@ -562,119 +543,63 @@ static AVCodecContext* _php_get_decoder_context(ff_movie_context *ffmovie_ctx,
 /* }}} */
 
 
-/* {{{ proto string getComment()
- */
+static void
+getDictField(zend_execute_data *execute_data, zval *return_value,
+    const char *key)
+{
+    ff_movie_context *ffmovie_ctx;
+
+    GET_MOVIE_RESOURCE(ffmovie_ctx);
+
+	if (key == NULL)
+		/* getcomment becomes "comment" */
+		key = EX(func)->common.function_name->val + 3;
+
+    AVDictionaryEntry *m_entry = av_dict_get(ffmovie_ctx->fmt_ctx->metadata,
+	    key, NULL, 0);
+
+    RETURN_STRING(m_entry->value);
+}
+
 FFMPEG_PHP_METHOD(ffmpeg_movie, getComment)
 {
-    ff_movie_context *ffmovie_ctx;
-
-    GET_MOVIE_RESOURCE(ffmovie_ctx);
-    
-    RETURN_STRINGL(ffmovie_ctx->fmt_ctx->comment,
-            strlen(ffmovie_ctx->fmt_ctx->comment));
+	getDictField(execute_data, return_value, NULL);
 }
-/* }}} */
 
-
-/* {{{ proto string getTitle()
- * Return title field from movie or title ID3 tag from an MP3 file.
- */
 FFMPEG_PHP_METHOD(ffmpeg_movie, getTitle)
 {
-    ff_movie_context *ffmovie_ctx;
-    
-    GET_MOVIE_RESOURCE(ffmovie_ctx);
-
-    RETURN_STRINGL(ffmovie_ctx->fmt_ctx->title,
-            strlen(ffmovie_ctx->fmt_ctx->title));
+	getDictField(execute_data, return_value, NULL);
 }
-/* }}} */
 
-
-/* {{{ proto string getAuthor() or getArtist()
- * Return author field from a movie or artist ID3 tag from am MP3 files.
- */
 FFMPEG_PHP_METHOD(ffmpeg_movie, getAuthor)
 {
-    ff_movie_context *ffmovie_ctx;
-    
-    GET_MOVIE_RESOURCE(ffmovie_ctx);
-
-    RETURN_STRINGL(ffmovie_ctx->fmt_ctx->author,
-            strlen(ffmovie_ctx->fmt_ctx->author));
+	getDictField(execute_data, return_value, NULL);
 }
-/* }}} */
 
-
-/* {{{ proto string getCopyright()
- */
 FFMPEG_PHP_METHOD(ffmpeg_movie, getCopyright)
 {
-    ff_movie_context *ffmovie_ctx;
-    
-    GET_MOVIE_RESOURCE(ffmovie_ctx);
-
-    RETURN_STRINGL(ffmovie_ctx->fmt_ctx->copyright,
-            strlen(ffmovie_ctx->fmt_ctx->copyright));
+	getDictField(execute_data, return_value, NULL);
 }
-/* }}} */
 
-
-/* {{{ proto string getAlbum()
- *  Return ID3 album field from an mp3 file
- */
 FFMPEG_PHP_METHOD(ffmpeg_movie, getAlbum)
 {
-    ff_movie_context *ffmovie_ctx;
-    
-    GET_MOVIE_RESOURCE(ffmovie_ctx);
-
-    RETURN_STRINGL(ffmovie_ctx->fmt_ctx->album,
-            strlen(ffmovie_ctx->fmt_ctx->album));
+	getDictField(execute_data, return_value, NULL);
 }
-/* }}} */
 
-/* {{{ proto string getGenre()
- *  Return ID3 genre field from an mp3 file
- */
 FFMPEG_PHP_METHOD(ffmpeg_movie, getGenre)
 {
-    ff_movie_context *ffmovie_ctx;
-    
-    GET_MOVIE_RESOURCE(ffmovie_ctx);
-
-    RETURN_STRINGL(ffmovie_ctx->fmt_ctx->genre,
-            strlen(ffmovie_ctx->fmt_ctx->genre));
+	getDictField(execute_data, return_value, NULL);
 }
-/* }}} */
 
-
-/* {{{ proto int getTrackNumber()
- *  Return ID3 track field from an mp3 file
- */
 FFMPEG_PHP_METHOD(ffmpeg_movie, getTrackNumber)
 {
-    ff_movie_context *ffmovie_ctx;
-    
-    GET_MOVIE_RESOURCE(ffmovie_ctx);
-    
-    RETURN_LONG(ffmovie_ctx->fmt_ctx->track);
+	getDictField(execute_data, return_value, "track");
 }
-/* }}} */
 
-/* {{{ proto int getYear()
- *  Return ID3 year field from an mp3 file
- */
 FFMPEG_PHP_METHOD(ffmpeg_movie, getYear)
 {
-    ff_movie_context *ffmovie_ctx;
-    
-    GET_MOVIE_RESOURCE(ffmovie_ctx);
-    
-    RETURN_LONG(ffmovie_ctx->fmt_ctx->year);
+	getDictField(execute_data, return_value, "date");
 }
-/* }}} */
-
 
 /* {{{ _php_get_duration()
  */
@@ -891,7 +816,7 @@ static int _php_get_pixelformat(ff_movie_context *ffmovie_ctx)
     
     decoder_ctx = _php_get_decoder_context(ffmovie_ctx, CODEC_TYPE_VIDEO);
 
-    return decoder_ctx ? decoder_ctx->pix_fmt : 0;
+    return decoder_ctx ? decoder_ctx->pix_fmt : AV_PIX_FMT_NONE;
 }
 /* }}} */
 
@@ -907,13 +832,10 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getPixelFormat)
     GET_MOVIE_RESOURCE(ffmovie_ctx);
 
     pix_fmt = _php_get_pixelformat(ffmovie_ctx);
-    fmt = avcodec_get_pix_fmt_name(pix_fmt);
-    
+    fmt = av_get_pix_fmt_name(pix_fmt);
+
     if (fmt) {
-        /* cast const to non-const to keep compiler from complaining, 
-           RETURN_STRINGL just copies so the string won't get overwritten
-           */
-        RETURN_STRINGL((char *)fmt, strlen(fmt));
+        RETURN_STRING(fmt);
     } else {
         RETURN_FALSE;
     }
@@ -989,13 +911,15 @@ static const char* _php_get_codec_name(ff_movie_context *ffmovie_ctx, int type)
     /* Copied from libavcodec/utils.c::avcodec_string */
     if (p) {
         codec_name = p->name;
+/*
         if (decoder_ctx->codec_id == CODEC_ID_MP3) {
             if (decoder_ctx->sub_id == 2)
                 codec_name = "mp2";
             else if (decoder_ctx->sub_id == 1)
                 codec_name = "mp1";
         }
-    } else if (decoder_ctx->codec_id == CODEC_ID_MPEG2TS) {
+ */
+    } else if (decoder_ctx->codec_id == AV_CODEC_ID_MPEG2TS) {
         /* fake mpeg2 transport stream codec (currently not registered) */
         codec_name = "mpeg2ts";
     } else if (decoder_ctx->codec_name[0] != '\0') {
@@ -1248,15 +1172,14 @@ static AVFrame* _php_read_av_frame(ff_movie_context *ffmovie_ctx,
         return NULL;
     }
 
-    frame = avcodec_alloc_frame();
+    frame = av_frame_alloc();
 
     /* read next frame */ 
     while (av_read_frame(ffmovie_ctx->fmt_ctx, &packet) >= 0) {
         if (packet.stream_index == video_stream) {
-        
-            avcodec_decode_video(decoder_ctx, frame, &got_frame,
-                    packet.data, packet.size);
-        
+ 
+            avcodec_decode_video2(decoder_ctx, frame, &got_frame, &packet);
+ 
             if (got_frame) {
                 *is_keyframe = (packet.flags & PKT_FLAG_KEY);
                 *pts = packet.pts;
@@ -1317,14 +1240,6 @@ static AVFrame* _php_get_av_frame(ff_movie_context *ffmovie_ctx,
         frame = _php_read_av_frame(ffmovie_ctx, decoder_ctx, is_keyframe, pts);
 
         /* hurry up if we're still a ways from the target frame */
-        if (wanted_frame != GETFRAME_KEYFRAME &&
-                wanted_frame != GETFRAME_NEXTFRAME &&
-                wanted_frame - ffmovie_ctx->frame_number > 
-                decoder_ctx->gop_size + 1) {
-            decoder_ctx->hurry_up = 1;
-        } else {
-            decoder_ctx->hurry_up = 0;
-        }
         ffmovie_ctx->frame_number++; 
 
         /* 
@@ -1378,7 +1293,7 @@ static int _php_get_ff_frame(ff_movie_context *ffmovie_ctx,
         ff_frame->keyframe = is_keyframe;
         ff_frame->pts = pts;
         
-        ff_frame->av_frame = avcodec_alloc_frame();
+        ff_frame->av_frame = av_frame_alloc();
         avpicture_alloc((AVPicture*)ff_frame->av_frame, ff_frame->pixel_format,
             ff_frame->width, ff_frame->height);
  
@@ -1464,7 +1379,8 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getFrame)
  * one frame is read. This function will read a frame without moving the
  * frame counter.
  */
-void _php_pre_read_frame(ff_movie_context *ffmovie_ctx) {
+static void
+_php_pre_read_frame(ff_movie_context *ffmovie_ctx) {
     AVFrame *frame = NULL;
     int is_keyframe;
     int64_t pts;
