@@ -312,9 +312,7 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, toGDImage)
 
 	_php_convert_frame(ff_frame, FFMPEG_PHP_FFMPEG_RGB_PIX_FORMAT);
 
-	//fprintf(stderr, "before toGDImage width = %d, height = %d, le->ptr = %d\n", ff_frame->width, ff_frame->height, le->ptr);
 	_php_get_gd_image(return_value, ff_frame->width, ff_frame->height);
-	//fprintf(stderr, "after  toGDImage return_value->value.lval = %ld, Z_PTR_P(return_value) = %ld\n", return_value->value.lval, Z_PTR_P(return_value));
 
 	FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, return_value);
 
@@ -324,7 +322,6 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, toGDImage)
 	}
 }
 /* }}} */
-
 
 #endif /* HAVE_LIBGD20 */
 
