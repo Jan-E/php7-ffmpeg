@@ -1,5 +1,5 @@
 PHP_ARG_WITH(ffmpeg,for ffmpeg support, 
-[  --with-ffmpeg[=DIR]       Include ffmpeg support (requires ffmpeg >= 0.5).])
+[  --with-ffmpeg[=DIR]       Include ffmpeg support])
 
 PHP_ARG_WITH(libgd-incdir, C include dir for libgd,
 [  --with-libgd-incdir[=DIR] Include path for the C headers of libgd])
@@ -62,10 +62,10 @@ if test "$PHP_FFMPEG" != "no"; then
     if test -f $i/lib/libavcodec.dylib; then
       FFMPEG_LIBDIR=$i/lib
     fi
-    done
+  done
 
-    PHP_ADD_LIBRARY_WITH_PATH(avcodec, $FFMPEG_LIBDIR, FFMPEG_SHARED_LIBADD)
-    PHP_ADD_LIBRARY_WITH_PATH(avformat, $FFMPEG_LIBDIR, FFMPEG_SHARED_LIBADD)
+  PHP_ADD_LIBRARY_WITH_PATH(avcodec, $FFMPEG_LIBDIR, FFMPEG_SHARED_LIBADD)
+  PHP_ADD_LIBRARY_WITH_PATH(avformat, $FFMPEG_LIBDIR, FFMPEG_SHARED_LIBADD)
 
 
   if test -z "$FFMPEG_LIBDIR"; then
@@ -93,15 +93,28 @@ if test "$PHP_FFMPEG" != "no"; then
   CFLAGS=$SAVED_CFLAGS
 
   if test "$enable_ffmpeg_swscale" == yes; then
-     AC_DEFINE(HAVE_SWSCALER, 1, [Define to 1 if software scaler is compiled into ffmpeg])
-     PHP_ADD_LIBRARY_WITH_PATH(swscale, $FFMPEG_LIBDIR, FFMPEG_SHARED_LIBADD)
+    AC_DEFINE(HAVE_SWSCALER, 1, [Define to 1 if software scaler is compiled into ffmpeg])
+    PHP_ADD_LIBRARY_WITH_PATH(swscale, $FFMPEG_LIBDIR, FFMPEG_SHARED_LIBADD)
   else
-      dnl Ignore deprecation warnings that using img_convert generates these days
-      CFLAGS="$CFLAGS -Wno-deprecated-declarations"
+    dnl Ignore deprecation warnings that using img_convert generates these days
+    CFLAGS="$CFLAGS -Wno-deprecated-declarations"
+  fi
+
+  dnl Get PHP version
+  AC_MSG_CHECKING([PHP version])
+  if test -z "$PHP_VERSION"; then
+    if test -z "$PHP_CONFIG"; then
+      AC_MSG_ERROR([php-config not found])
+    fi
+    PHP_VERSION=`$PHP_CONFIG --version 2>/dev/null`
+    PHP_MAJOR_VERSION=`echo $PHP_VERSION | sed -e 's/\([[0-9]]*\)\.\([[0-9]]*\)\.\([[0-9]]*\).*/\1/g' 2>/dev/null`
+    PHP_MINOR_VERSION=`echo $PHP_VERSION | sed -e 's/\([[0-9]]*\)\.\([[0-9]]*\)\.\([[0-9]]*\).*/\2/g' 2>/dev/null`
+    PHP_RELEASE_VERSION=`echo $PHP_VERSION | sed -e 's/\([[0-9]]*\)\.\([[0-9]]*\)\.\([[0-9]]*\).*/\3/g' 2>/dev/null`
+    AC_MSG_RESULT([$PHP_MAJOR_VERSION.$PHP_MINOR_VERSION.$PHP_RELEASE_VERSION])
   fi
 
   dnl usual suspect: --with-libgd-incdir=/usr/local/php71/include/php/ext/gd/libgd
-  SEARCH_PATH="/usr/local /usr"
+  SEARCH_PATH="/usr/local /usr /usr/local/php$PHP_MAJOR_VERSION$PHP_MINOR_VERSION/include/php/ext/gd/libgd"
   SEARCH_FOR="gd.h"
 
   AC_MSG_CHECKING([for libgd includes])
@@ -113,6 +126,8 @@ if test "$PHP_FFMPEG" != "no"; then
     for i in $SEARCH_PATH ; do
       if test -r "$i/include/$SEARCH_FOR"; then
         LIBGD_INCDIR=$i/include
+      elif test -r "$i/$SEARCH_FOR"; then
+        LIBGD_INCDIR=$i
       fi
     done
   fi
