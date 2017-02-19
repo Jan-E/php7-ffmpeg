@@ -106,6 +106,7 @@ if test "$PHP_FFMPEG" != "no"; then
       CFLAGS="$CFLAGS -Wno-deprecated-declarations"
   fi
 
+  dnl usual suspect: --with-libgd-incdir=/usr/local/php71/include/php/ext/gd/libgd
   SEARCH_PATH="/usr/local /usr"
   SEARCH_FOR="gd.h"
 
@@ -127,7 +128,8 @@ if test "$PHP_FFMPEG" != "no"; then
     AC_MSG_ERROR([Please install libgd])
   else
     AC_MSG_RESULT(found in $LIBGD_INCDIR)
-	dnl usual suspect: --with-libgd-incdir=/usr/local/php71/include/php/ext/gd/libgd
+    PHP_ADD_INCLUDE($LIBGD_INCDIR)
+    AC_DEFINE(HAVE_LIBGD20, 1)
   fi
 
   CFLAGS="$CFLAGS -Wall -fno-strict-aliasing"
@@ -138,5 +140,5 @@ if test "$PHP_FFMPEG" != "no"; then
   PHP_SUBST(FFMPEG_SHARED_LIBADD)
   AC_DEFINE(HAVE_FFMPEG_PHP,1,[ ])
     
-dnl PHP_DEBUG_MACRO(test.dbg)
+  dnl PHP_DEBUG_MACRO(test.dbg)
 fi
