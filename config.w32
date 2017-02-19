@@ -2,9 +2,29 @@
 
 ARG_ENABLE("ffmpeg", "whether to enable ffmpeg", "no");
 
+function check_for_main_ext(ext, header)
+{
+	if (!header) {
+		header = "php_"+ ext +".h";
+	}
+
+	/* When in configure, we're always in the root of PHP source */
+	var ext_path = "ext\\" + ext;
+
+	STDOUT.Write("Checking for ext/"+ ext +" ...  ");
+
+	if (FSO.FileExists(ext_path + "\\" + header)) {
+		STDOUT.WriteLine(ext_path);
+		return ext_path;
+	}
+
+	STDOUT.WriteLine("<not found>");
+	return false;
+}
+
 if (PHP_FFMPEG != "no") {
 	if (
-			// put the libs in win64build\lib and win32build\lib
+			// put the libs in deps\lib or win64build\lib and win32build\lib
 			CHECK_LIB("avcodec-52.lib", "ffmpeg", PHP_FFMPEG) &&
 			CHECK_LIB("avdevice-52.lib", "ffmpeg", PHP_FFMPEG) &&
 			CHECK_LIB("avformat-52.lib", "ffmpeg", PHP_FFMPEG) &&
@@ -33,10 +53,21 @@ if (PHP_FFMPEG != "no") {
 		PHP_INSTALL_HEADERS("", "ext/ffmpeg ext/ffmpeg/libavcodec ext/ffmpeg/libavdevice ext/ffmpeg/libavformat ext/ffmpeg/libavutil ext/ffmpeg/libswscale ext/ffmpeg/msvc" );
 // 0.7	PHP_INSTALL_HEADERS("", "ext/ffmpeg ext/ffmpeg/libavcodec ext/ffmpeg/libavdevice ext/ffmpeg/libavformat ext/ffmpeg/libavutil ext/ffmpeg/libavfilter ext/ffmpeg/libswscale ext/ffmpeg/msvc" );
 		ADD_FLAG("CFLAGS_FFMPEG", " \
-		/D HAVE_LIBGD20=1 \
 		/D HAVE_SWSCALER=1 \
 		/D HAVE_FFMPEG_PHP=1 \
 		");
+		
+		var f;
+		if ( (f = check_for_main_ext("gd") ) &&
+			CHECK_HEADER_ADD_INCLUDE("gd.h", "CFLAGS_FFMPEG", f + "\\libgd") &&
+			CHECK_HEADER_ADD_INCLUDE("gd_io.h", "CFLAGS_FFMPEG", f + "\\libgd")
+		) {
+			ADD_FLAG("CFLAGS_FFMPEG", '/I "' + f + '\\libgd" /D HAVE_LIBGD20=1');
+			ADD_EXTENSION_DEP("ffmpeg", "gd2", true);
+			STDOUT.WriteLine("ffmpeg-php gd support enabled; headers found at " + f + "\\libgd");
+		} else {
+			WARNING("ffmpeg-php gd support not enabled; headers not found at " + f);
+		}
 
 		if (PHP_DEBUG != "no") {
 			ADD_FLAG("CFLAGS_FFMPEG", "/W3");

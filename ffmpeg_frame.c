@@ -58,13 +58,9 @@
 	}
 #endif
 
-/*
-   include gd header from local include dir. This is a copy of gd.h that is
-   distributed with php7. It is distributed along with ffmpeg-php to
-   allow ffmpeg-php to be built without access to the php sources
-   */
 #if HAVE_LIBGD20
-#include "gd.h"
+
+#include <gd.h>
 
 #define FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, ret) { \
 	ZEND_GET_RESOURCE_TYPE_ID(le_gd, "gd"); \
