@@ -80,11 +80,11 @@ void img_resample_close(ImgReSampleContext *s);
 
 void img_resample(ImgReSampleContext * context, AVPicture * out, const AVPicture * in);
 
-ImgReSampleContext * img_resample_full_init (int owidth, int oheight, 
+ImgReSampleContext * img_resample_full_init (int owidth, int oheight,
         int iwidth, int iheight,
-        int topBand, int 
+        int topBand, int
         bottomBand, int leftBand, int rightBand,
-        int padtop, int 
+        int padtop, int
         padbottom, int padleft, int padright);
 
 ImgReSampleContext * img_resample_init (int owidth, int oheight, int iwidth, int iheight);

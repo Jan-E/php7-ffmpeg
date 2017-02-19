@@ -44,7 +44,7 @@
 #if LIBAVCODEC_VERSION_MAJOR >= 52
 #include <swscale.h>
 
-/* {{{ ffmpeg_img_convert() 
+/* {{{ ffmpeg_img_convert()
  * wrapper around ffmpeg image conversion routines
  */
 int img_convert(AVPicture *dst, int dst_pix_fmt,
@@ -53,8 +53,8 @@ int img_convert(AVPicture *dst, int dst_pix_fmt,
     struct SwsContext *sws_ctx = NULL;
 
     // TODO: Try to get cached sws_context first
-    sws_ctx = sws_getContext(src_width, src_height, 0, 
-            src_width, src_height, dst_pix_fmt, 
+    sws_ctx = sws_getContext(src_width, src_height, 0,
+            src_width, src_height, dst_pix_fmt,
             SWS_BICUBIC, NULL, NULL, NULL);
 
     if (sws_ctx == NULL){
@@ -74,17 +74,17 @@ void img_resample(ImgReSampleContext * context, AVPicture * pxOut, const AVPictu
 {
     if (context != NULL && context->context != NULL) {
         AVPicture shiftedInput; // = {0};
-        shiftedInput.data[0] = pxIn->data[0] + pxIn->linesize[0] * 
+        shiftedInput.data[0] = pxIn->data[0] + pxIn->linesize[0] *
             context->bandTop + context->bandLeft;
-        shiftedInput.data[1] = pxIn->data[1] + (pxIn->linesize[1] * 
+        shiftedInput.data[1] = pxIn->data[1] + (pxIn->linesize[1] *
                 (context->bandTop / 2)) + (context->bandLeft+1) / 2;
-        shiftedInput.data[2] = pxIn->data[2] + (pxIn->linesize[2] * 
+        shiftedInput.data[2] = pxIn->data[2] + (pxIn->linesize[2] *
                 (context->bandTop / 2)) + (context->bandLeft+1) / 2;
         shiftedInput.linesize[0] = pxIn->linesize[0];
         shiftedInput.linesize[1] = pxIn->linesize[1];
         shiftedInput.linesize[2] = pxIn->linesize[2];
-        sws_scale(context->context, (const uint8_t * const *)shiftedInput.data, 
-                (int*)shiftedInput.linesize, 0, context->height - context->bandBottom - 
+        sws_scale(context->context, (const uint8_t * const *)shiftedInput.data,
+                (int*)shiftedInput.linesize, 0, context->height - context->bandBottom -
                 context->bandTop, pxOut->data, pxOut->linesize);
     }
 }
@@ -98,9 +98,9 @@ ImgReSampleContext * img_resample_full_init (int owidth, int oheight, int iwidth
     }
 	srcSurface = (iwidth - rightBand - leftBand)* (iheight - topBand - bottomBand);
     // We use bilinear when the source surface is big, and bicubic when the number of pixels to handle is less than 1 MPixels
-    s->context = sws_getContext(iwidth - rightBand - leftBand, 
-            iheight - topBand - bottomBand, AV_PIX_FMT_YUV420P, owidth, oheight, 
-            AV_PIX_FMT_YUV420P, srcSurface > 1024000 ? SWS_FAST_BILINEAR : SWS_BICUBIC, 
+    s->context = sws_getContext(iwidth - rightBand - leftBand,
+            iheight - topBand - bottomBand, AV_PIX_FMT_YUV420P, owidth, oheight,
+            AV_PIX_FMT_YUV420P, srcSurface > 1024000 ? SWS_FAST_BILINEAR : SWS_BICUBIC,
             NULL, NULL, NULL);
     if (s->context == NULL) {
         av_free(s);
@@ -134,7 +134,7 @@ void img_resample_close(ImgReSampleContext * s)
     if (s == NULL) return;
     sws_freeContext(s->context);
 
-    av_free(s);   
+    av_free(s);
 }
 
 #endif

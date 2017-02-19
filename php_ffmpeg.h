@@ -38,7 +38,7 @@
 
 #include "php_version.h"
 
-/* 
+/*
  * PHP-4 doesn't have the METHOD, ME and MALIAS macros so map them back
  * to the function macros for PHP-4
  */
