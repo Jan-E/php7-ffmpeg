@@ -14,7 +14,7 @@ if test "$PHP_FFMPEG" != "no"; then
   dnl look for ffmpeg headers. Prepend this directory to the default dirs so it
   dnl gets checked first.
   if test "$PHP_FFMPEG" != "yes"; then
-      INC_CHECK_DIRS="$PHP_FFMPEG $INC_CHECK_DIRS"
+    INC_CHECK_DIRS="$PHP_FFMPEG $INC_CHECK_DIRS"
   fi
 
   AC_MSG_CHECKING(for ffmpeg headers)
@@ -42,10 +42,10 @@ if test "$PHP_FFMPEG" != "no"; then
   done
 
   if test -z "$FFMPEG_INC_FOUND"; then 
-     AC_MSG_RESULT()
-     AC_MSG_ERROR([ffmpeg headers not found. Make sure ffmpeg is compiled as shared libraries using the --enable-shared option])
+    AC_MSG_RESULT()
+    AC_MSG_ERROR([ffmpeg headers not found. Make sure ffmpeg is compiled as shared libraries using the --enable-shared option])
   else
-     AC_MSG_RESULT(...found in $FFMPEG_INC_FOUND)
+    AC_MSG_RESULT(...found in $FFMPEG_INC_FOUND)
   fi
  
 
@@ -134,7 +134,7 @@ if test "$PHP_FFMPEG" != "no"; then
 
   if test -z "$LIBGD_INCDIR"; then
     AC_MSG_RESULT([not found])
-    AC_MSG_ERROR([Please install libgd])
+    AC_MSG_ERROR([Please install or include libgd])
   else
     AC_MSG_RESULT(found in $LIBGD_INCDIR)
     PHP_ADD_INCLUDE($LIBGD_INCDIR)
