@@ -138,7 +138,7 @@ if test "$PHP_FFMPEG" != "no"; then
   else
     AC_MSG_RESULT(found in $LIBGD_INCDIR)
     PHP_ADD_INCLUDE($LIBGD_INCDIR)
-    AC_DEFINE(HAVE_LIBGD20, 1)
+    AC_DEFINE(HAVE_LIBGD20,1,[ ])
   fi
 
   CFLAGS="$CFLAGS -Wall -fno-strict-aliasing"
