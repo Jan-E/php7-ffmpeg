@@ -63,7 +63,9 @@ if (PHP_FFMPEG != "no") {
 			CHECK_HEADER_ADD_INCLUDE("gd_io.h", "CFLAGS_FFMPEG", f + "\\libgd")
 		) {
 			ADD_FLAG("CFLAGS_FFMPEG", '/I "' + f + '\\libgd" /D HAVE_LIBGD20=1');
-			ADD_EXTENSION_DEP("ffmpeg", "gd2", true);
+			if ((PHP_VERSION <= 7) && (PHP_MINOR_VERSION < 2)) {
+				ADD_EXTENSION_DEP("ffmpeg", "gd2", true);
+			}
 			STDOUT.WriteLine("ffmpeg-php gd support enabled; headers found at " + f + "\\libgd");
 		} else {
 			WARNING("ffmpeg-php gd support not enabled; headers not found at " + f);
