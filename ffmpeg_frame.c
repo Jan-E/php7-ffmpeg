@@ -103,10 +103,10 @@ zend_function_entry ffmpeg_frame_class_methods[] = {
 	/* methods */
 	FFMPEG_PHP_MALIAS(ffmpeg_frame, getwidth,                    getWidth,                   arginfo_class_ffmpeg_frame_getwidth,                   0)
 	FFMPEG_PHP_MALIAS(ffmpeg_frame, getheight,                   getHeight,                  arginfo_class_ffmpeg_frame_getheight,                  0)
-	FFMPEG_PHP_MALIAS(ffmpeg_frame, resize,                      resize,                     NULL, 0)
+	FFMPEG_PHP_MALIAS(ffmpeg_frame, resize,                      resize,                     arginfo_class_ffmpeg_frame_resize,                     0)
 	FFMPEG_PHP_MALIAS(ffmpeg_frame, iskeyframe,                  isKeyFrame,                 arginfo_class_ffmpeg_frame_iskeyframe,                 0)
-	FFMPEG_PHP_MALIAS(ffmpeg_frame, getpresentationtimestamp,    getPresentationTimestamp,   NULL, 0)
-	FFMPEG_PHP_MALIAS(ffmpeg_frame, getpts,                      getPresentationTimestamp,   NULL, 0)
+	FFMPEG_PHP_MALIAS(ffmpeg_frame, getpresentationtimestamp,    getPresentationTimestamp,   arginfo_class_ffmpeg_frame_getpresentationtimestamp,   0)
+	FFMPEG_PHP_MALIAS(ffmpeg_frame, getpts,                      getPresentationTimestamp,   arginfo_class_ffmpeg_frame_getpts,                     0)
 	FFMPEG_PHP_END_METHODS
 };
 /* }}} */
