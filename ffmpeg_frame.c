@@ -93,6 +93,8 @@ zend_function_entry ffmpeg_frame_class_methods[] = {
 	/* object can't be created from user space so no PHP constructor */
 	//PHP_ME(ffmpeg_frame, __construct, NULL, 0)
 
+#if PHP_MAJOR_VERSION >= 8
+
 #if HAVE_LIBGD20
 	/* gd methods */
 	FFMPEG_PHP_MALIAS(ffmpeg_frame, togdimage,                   toGDImage,                  arginfo_class_ffmpeg_frame_togdimage,                  0)
@@ -107,6 +109,26 @@ zend_function_entry ffmpeg_frame_class_methods[] = {
 	FFMPEG_PHP_MALIAS(ffmpeg_frame, iskeyframe,                  isKeyFrame,                 arginfo_class_ffmpeg_frame_iskeyframe,                 0)
 	FFMPEG_PHP_MALIAS(ffmpeg_frame, getpresentationtimestamp,    getPresentationTimestamp,   arginfo_class_ffmpeg_frame_getpresentationtimestamp,   0)
 	FFMPEG_PHP_MALIAS(ffmpeg_frame, getpts,                      getPresentationTimestamp,   arginfo_class_ffmpeg_frame_getpts,                     0)
+
+#else
+
+#if HAVE_LIBGD20
+	/* gd methods */
+	FFMPEG_PHP_MALIAS(ffmpeg_frame, togdimage,      toGDImage,     NULL, 0)
+
+
+#endif // HAVE_LIBGD20
+
+	/* methods */
+	FFMPEG_PHP_MALIAS(ffmpeg_frame, getwidth,                    getWidth,                   NULL, 0)
+	FFMPEG_PHP_MALIAS(ffmpeg_frame, getheight,                   getHeight,                  NULL, 0)
+	FFMPEG_PHP_MALIAS(ffmpeg_frame, resize,                      resize,                     NULL, 0)
+	FFMPEG_PHP_MALIAS(ffmpeg_frame, iskeyframe,                  isKeyFrame,                 NULL, 0)
+	FFMPEG_PHP_MALIAS(ffmpeg_frame, getpresentationtimestamp,    getPresentationTimestamp,   NULL, 0)
+	FFMPEG_PHP_MALIAS(ffmpeg_frame, getpts,                      getPresentationTimestamp,   NULL, 0)
+
+#endif
+
 	FFMPEG_PHP_END_METHODS
 };
 /* }}} */
