@@ -95,7 +95,7 @@ zend_function_entry ffmpeg_frame_class_methods[] = {
 
 #if HAVE_LIBGD20
 	/* gd methods */
-	FFMPEG_PHP_MALIAS(ffmpeg_frame, togdimage,      toGDImage,     NULL, 0)
+	FFMPEG_PHP_MALIAS(ffmpeg_frame, togdimage,                   toGDImage,                  arginfo_class_ffmpeg_frame_togdimage,                  0)
 
 
 #endif // HAVE_LIBGD20

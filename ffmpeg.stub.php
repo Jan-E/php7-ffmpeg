@@ -20,13 +20,13 @@ class ffmpeg_movie {
 
 	public function getframeheight(): int {}
 
-//	public function getframe($int) {}
+	public function getframe($int): ffmpeg_frame {}
 
 }
 
 class ffmpeg_frame {
 	// togdimage is only active when HAVE_LIBGD20
-//	public function togdimage(): int {}
+	public function togdimage(): GdImage|false {}
 	
 	public function getwidth(): int {}
 	

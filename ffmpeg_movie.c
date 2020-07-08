@@ -123,7 +123,7 @@ zend_function_entry ffmpeg_movie_class_methods[] = {
     FFMPEG_PHP_MALIAS(ffmpeg_movie, hasaudio,            hasAudio,            NULL, 0)
     FFMPEG_PHP_MALIAS(ffmpeg_movie, hasvideo,            hasVideo,            NULL, 0)
     FFMPEG_PHP_MALIAS(ffmpeg_movie, getnextkeyframe,     getNextKeyFrame,     NULL, 0)
-    FFMPEG_PHP_MALIAS(ffmpeg_movie, getframe,            getFrame,            NULL, 0)
+    FFMPEG_PHP_MALIAS(ffmpeg_movie, getframe,            getFrame,            arginfo_class_ffmpeg_movie_getframe,            0)
     FFMPEG_PHP_MALIAS(ffmpeg_movie, getvideocodec,       getVideoCodec,       NULL, 0)
     FFMPEG_PHP_MALIAS(ffmpeg_movie, getaudiocodec,       getAudioCodec,       NULL, 0)
     FFMPEG_PHP_MALIAS(ffmpeg_movie, getvideostreamid,    getVideoStreamId,    NULL, 0)
