@@ -255,8 +255,10 @@ _php_get_gd_image(zval *retval, int ww, int hh)
 	if (call_user_function_ex(EG(function_table), NULL, &gd_function_name,
 			retval, 2, gd_argv, 0, NULL) == SUCCESS && Z_TYPE(*retval) != IS_UNDEF) {
 #else
-	if (call_user_function(EG(function_table), NULL, &gd_function_name,
-			retval, 2, gd_argv) == SUCCESS && Z_TYPE(*retval) != IS_UNDEF) {
+#define call_user_function_ex(function_table, object, function_name, retval_ptr, param_count, params, symbol_table) \
+	_call_user_function_ex(object, function_name, retval_ptr, param_count, params)
+	if (call_user_function_ex(EG(function_table), NULL, &gd_function_name,
+			retval, 2, gd_argv, NULL) == SUCCESS && Z_TYPE(*retval) != IS_UNDEF) {
 #endif
 				/* hooray */
 	} else {
