@@ -43,7 +43,6 @@
 #endif
 
 #include "php_ffmpeg.h"
-#include "ffmpeg_arginfo.h"
 
 #include "ffmpeg_frame.h"
 #include "ffmpeg_tools.h"
