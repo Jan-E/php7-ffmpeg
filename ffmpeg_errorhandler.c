@@ -55,7 +55,7 @@ void ffmpeg_errorhandler(void *ptr, int level, const char *msg, va_list args)
 		break;
 	}
 
-	php_verror("", "", php_level, msg, args TSRMLS_CC);
+	php_verror("", "", php_level, msg, args);
 }
 /* }}} */
 

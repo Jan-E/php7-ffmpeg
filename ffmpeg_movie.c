@@ -356,7 +356,7 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
 //	    if (persistent) {
 //		zend_resource *le;
 //	        /* resolve the fully-qualified path name to use as the hash key */
-//	        fullpath = expand_filepath(filename, NULL TSRMLS_CC);
+//	        fullpath = expand_filepath(filename, NULL);
 //
 //	        hashkey_length = sizeof("ffmpeg-php_")-1 +
 //	            strlen(SAFE_STRING(filename));
@@ -371,7 +371,7 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
 //	            int type;
 //
 //	            if (Z_TYPE_P(le) != le_ffmpeg_pmovie) {
-//	                php_error_docref(NULL TSRMLS_CC, E_ERROR,
+//	                php_error_docref(NULL, E_ERROR,
 //	                        "Failed to retrieve persistent resource");
 //	            }
 //	            ffmovie_ctx = (ff_movie_context *)le->ptr;
@@ -382,7 +382,7 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
 //	                /* add a reference to the persistent movie */
 //	                zend_list_addref(ffmovie_ctx->rsrc_id);
 //	            } else {
-//	                //php_error_docref(NULL TSRMLS_CC, E_ERROR,
+//	                //php_error_docref(NULL, E_ERROR,
 //	                //"Not a valid persistent movie resource");
 //	                ffmovie_ctx->rsrc_id = zend_register_resource(
 //	                        ffmovie_ctx, le_ffmpeg_pmovie);
@@ -405,7 +405,7 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
 //	                        hashkey_length+1, (void *)&new_le, sizeof(zend_resource),
 //	                        NULL))
 //				{
-//							php_error_docref(NULL TSRMLS_CC, E_WARNING,
+//							php_error_docref(NULL, E_WARNING,
 //	                        "Failed to register persistent resource");
 //	            }
 //
@@ -442,7 +442,7 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
 
 /* {{{ _php_free_ffmpeg_movie
  */
-static void _php_free_ffmpeg_movie(zend_resource *rsrc TSRMLS_DC)
+static void _php_free_ffmpeg_movie(zend_resource *rsrc)
 {
     int i;
     ff_movie_context *ffmovie_ctx = (ff_movie_context*)rsrc->ptr;
@@ -465,7 +465,7 @@ static void _php_free_ffmpeg_movie(zend_resource *rsrc TSRMLS_DC)
 
 /* {{{ _php_free_ffmpeg_pmovie
  */
-static void _php_free_ffmpeg_pmovie(zend_resource *rsrc TSRMLS_DC)
+static void _php_free_ffmpeg_pmovie(zend_resource *rsrc)
 {
     /* TODO: Factor into a single free function for pmovie and movie */
     int i;
@@ -504,7 +504,7 @@ void register_ffmpeg_movie_class(int module_number)
 
     /* register ffmpeg movie class */
     ffmpeg_movie_class_entry_ptr =
-        zend_register_internal_class(&ffmpeg_movie_class_entry TSRMLS_CC);
+        zend_register_internal_class(&ffmpeg_movie_class_entry);
 }
 /* }}} */
 
@@ -1367,7 +1367,7 @@ static int _php_get_ff_frame(ff_movie_context *ffmovie_ctx,
         ff_frame = _php_create_ffmpeg_frame(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 
         if (!ff_frame) {
-            php_error_docref(NULL TSRMLS_CC, E_ERROR,
+            php_error_docref(NULL, E_ERROR,
                     "Error allocating ffmpeg_frame resource");
         }
 
@@ -1446,7 +1446,7 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getFrame)
 
         /* bounds check wanted frame */
         if (wanted_frame < 1) {
-            php_error_docref(NULL TSRMLS_CC, E_ERROR,
+            php_error_docref(NULL, E_ERROR,
                     "Frame number must be greater than zero");
         }
     }
