@@ -41,7 +41,6 @@
 void ffmpeg_errorhandler(void *ptr, int level, const char *msg, va_list args)
 {
 	int php_level;
-	TSRMLS_FETCH();
 
 	switch (level) {
 		case AV_LOG_ERROR:
