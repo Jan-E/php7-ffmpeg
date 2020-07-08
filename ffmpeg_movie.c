@@ -54,6 +54,7 @@
 #endif
 
 #include "php_ffmpeg.h"
+#include "ffmpeg_arginfo.h"
 
 #include "ffmpeg_frame.h"
 #include "ffmpeg_movie.h"
@@ -99,7 +100,7 @@ static int le_ffmpeg_pmovie;
 zend_function_entry ffmpeg_movie_class_methods[] = {
 
     /* contructor */
-    FFMPEG_PHP_ME(ffmpeg_movie, __construct, NULL, 0)
+    FFMPEG_PHP_ME(ffmpeg_movie, __construct, arginfo_class_ffmpeg_movie___construct, 0)
 
     /* methods */
     FFMPEG_PHP_MALIAS(ffmpeg_movie, getduration,         getDuration,         NULL, 0)
@@ -115,8 +116,8 @@ zend_function_entry ffmpeg_movie_class_methods[] = {
     FFMPEG_PHP_MALIAS(ffmpeg_movie, getgenre,            getGenre,            NULL, 0)
     FFMPEG_PHP_MALIAS(ffmpeg_movie, getyear,             getYear,             NULL, 0)
     FFMPEG_PHP_MALIAS(ffmpeg_movie, gettracknumber,      getTrackNumber,      NULL, 0)
-    FFMPEG_PHP_MALIAS(ffmpeg_movie, getframewidth,       getFrameWidth,       NULL, 0)
-    FFMPEG_PHP_MALIAS(ffmpeg_movie, getframeheight,      getFrameHeight,      NULL, 0)
+    FFMPEG_PHP_MALIAS(ffmpeg_movie, getframewidth,       getFrameWidth,       arginfo_class_ffmpeg_movie_getframewidth,       0)
+    FFMPEG_PHP_MALIAS(ffmpeg_movie, getframeheight,      getFrameHeight,      arginfo_class_ffmpeg_movie_getframeheight,      0)
     FFMPEG_PHP_MALIAS(ffmpeg_movie, getframenumber,      getFrameNumber,      NULL, 0)
     FFMPEG_PHP_MALIAS(ffmpeg_movie, getpixelformat,      getPixelFormat,      NULL, 0)
     FFMPEG_PHP_MALIAS(ffmpeg_movie, getbitrate,          getBitRate,          NULL, 0)

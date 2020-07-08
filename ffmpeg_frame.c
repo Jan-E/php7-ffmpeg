@@ -43,6 +43,7 @@
 #endif
 
 #include "php_ffmpeg.h"
+#include "ffmpeg_arginfo.h"
 
 #include "ffmpeg_frame.h"
 #include "ffmpeg_tools.h"
@@ -101,10 +102,10 @@ zend_function_entry ffmpeg_frame_class_methods[] = {
 #endif // HAVE_LIBGD20
 
 	/* methods */
-	FFMPEG_PHP_MALIAS(ffmpeg_frame, getwidth,                    getWidth,                   NULL, 0)
-	FFMPEG_PHP_MALIAS(ffmpeg_frame, getheight,                   getHeight,                  NULL, 0)
+	FFMPEG_PHP_MALIAS(ffmpeg_frame, getwidth,                    getWidth,                   arginfo_class_ffmpeg_frame_getwidth,                   0)
+	FFMPEG_PHP_MALIAS(ffmpeg_frame, getheight,                   getHeight,                  arginfo_class_ffmpeg_frame_getheight,                  0)
 	FFMPEG_PHP_MALIAS(ffmpeg_frame, resize,                      resize,                     NULL, 0)
-	FFMPEG_PHP_MALIAS(ffmpeg_frame, iskeyframe,                  isKeyFrame,                 NULL, 0)
+	FFMPEG_PHP_MALIAS(ffmpeg_frame, iskeyframe,                  isKeyFrame,                 arginfo_class_ffmpeg_frame_iskeyframe,                 0)
 	FFMPEG_PHP_MALIAS(ffmpeg_frame, getpresentationtimestamp,    getPresentationTimestamp,   NULL, 0)
 	FFMPEG_PHP_MALIAS(ffmpeg_frame, getpts,                      getPresentationTimestamp,   NULL, 0)
 	FFMPEG_PHP_END_METHODS
