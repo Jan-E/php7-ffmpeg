@@ -251,8 +251,13 @@ _php_get_gd_image(zval *retval, int ww, int hh)
 	    zend_error(E_ERROR, "Error can't find %s function", "imagecreatetruecolor");
 	}
 
+#if PHP_MAJOR_VERSION < 8
 	if (call_user_function_ex(EG(function_table), NULL, &gd_function_name,
 			retval, 2, gd_argv, 0, NULL) == SUCCESS && Z_TYPE(*retval) != IS_UNDEF) {
+#else
+	if (call_user_function(EG(function_table), NULL, &gd_function_name,
+			retval, 2, gd_argv) == SUCCESS && Z_TYPE(*retval) != IS_UNDEF) {
+#endif
 				/* hooray */
 	} else {
 	    zend_error(E_ERROR, "Error calling %s function", "imagecreatetruecolor");
