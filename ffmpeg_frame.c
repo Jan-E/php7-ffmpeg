@@ -62,6 +62,36 @@
 
 #include <gd.h>
 
+#if PHP_MAJOR_VERSION >= 8
+
+// copied from https://github.com/php/php-src/blob/7ac9e9bf644ec9a305641386591a507a9159e5be/ext/gd/gd.c#L151-L154
+
+typedef struct _gd_ext_image_object {
+	gdImagePtr image;
+	zend_object std;
+} php_gd_image_object;
+
+// copied from https://github.com/php/php-src/blob/7ac9e9bf644ec9a305641386591a507a9159e5be/ext/gd/gd.c#L172-L184
+
+/**
+ * Returns the underlying php_gd_image_object from a zend_object
+ */
+static zend_always_inline php_gd_image_object* php_gd_exgdimage_from_zobj_p(zend_object* obj)
+{
+	return (php_gd_image_object *) ((char *) (obj) - XtOffsetOf(php_gd_image_object, std));
+}
+
+/**
+ * Converts an extension GdImage instance contained within a zval into the gdImagePtr
+ * for use with library APIs
+ */
+static zend_always_inline gdImagePtr php_gd_libgdimageptr_from_zval_p(zval* zp)
+{
+	return php_gd_exgdimage_from_zobj_p(Z_OBJ_P(zp))->image;
+}
+
+#endif
+
 #define FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, ret) { \
 	ZEND_GET_RESOURCE_TYPE_ID(le_gd, "gd"); \
 	if ((gd_img = (gdImagePtr)zend_fetch_resource(Z_RES_P(ret), "Image", le_gd)) == NULL) {\
@@ -277,20 +307,25 @@ _php_get_gd_image(zval *retval, int ww, int hh)
 	if (call_user_function_ex(EG(function_table), NULL, &gd_function_name,
 			retval, 2, gd_argv, 0, NULL) == SUCCESS && Z_TYPE(*retval) != IS_UNDEF) {
 #else
-#define call_user_function_ex(function_table, object, function_name, retval_ptr, param_count, params, symbol_table) \
-	_call_user_function_ex(object, function_name, retval_ptr, param_count, params)
-	if (call_user_function_ex(EG(function_table), NULL, &gd_function_name,
-			retval, 2, gd_argv, NULL) == SUCCESS && Z_TYPE(*retval) != IS_UNDEF) {
+	if (call_user_function(EG(function_table), NULL, &gd_function_name,
+			retval, 2, gd_argv) == SUCCESS && Z_TYPE(*retval) != IS_UNDEF) {
 #endif
 				/* hooray */
 	} else {
 	    zend_error(E_ERROR, "Error calling %s function", "imagecreatetruecolor");
 	}
 
+#if PHP_MAJOR_VERSION < 8
 	if (Z_TYPE(*retval) != IS_RESOURCE) {
 	    php_error_docref(NULL, E_ERROR,
 	            "Error creating GD Image, Z_TYPE(*retval) = %d: %s ( %d, %d ). Note: 8 = IS_OBJECT, see zend_types.h", Z_TYPE(*retval), "imagecreatetruecolor", ww, hh );
 	}
+#else
+	if (Z_TYPE(*retval) != IS_OBJECT) {
+	    php_error_docref(NULL, E_ERROR,
+	            "Error creating GD Image, Z_TYPE(*retval) = %d: %s ( %d, %d ). Note: 8 = IS_OBJECT, see zend_types.h", Z_TYPE(*retval), "imagecreatetruecolor", ww, hh );
+	}
+#endif
 
 	Z_ADDREF_P(retval);
 	zval_ptr_dtor(retval);
@@ -308,6 +343,8 @@ static int _php_avframe_to_gd_image(AVFrame *frame, gdImage *dest, int width,
 
 	// Borrowed from https://github.com/tony2001/ffmpeg-php/commit/23174b4
 	if (width > dest->sx || height > dest->sy) {
+		php_error_docref(NULL, E_ERROR,
+	            "width (%d) > gdImage->sx (%d) || height (%d) > gdImage->sy (%d) ", width, dest->sx, height, dest->sy );
 		return -1;
 	}
 
@@ -345,7 +382,11 @@ static int _php_gd_image_to_avframe(gdImage *src, AVFrame *frame, int width,
 FFMPEG_PHP_METHOD(ffmpeg_frame, toGDImage)
 {
 	ff_frame_context *ff_frame;
+#if PHP_MAJOR_VERSION < 8
+	gdImagePtr gd_img;
+#else
 	gdImage *gd_img;
+#endif
 
 	GET_FRAME_RESOURCE(getThis(), ff_frame);
 
@@ -353,7 +394,12 @@ FFMPEG_PHP_METHOD(ffmpeg_frame, toGDImage)
 
 	_php_get_gd_image(return_value, ff_frame->width, ff_frame->height);
 
+#if PHP_MAJOR_VERSION < 8
 	FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, return_value);
+#else
+	gd_img = php_gd_libgdimageptr_from_zval_p(return_value);
+	//php_error_docref(NULL, E_NOTICE, "gdImage->sx = %d, gdImage->sy = %d", gd_img->sx, gd_img->sy );
+#endif
 
 	if (_php_avframe_to_gd_image(ff_frame->av_frame, gd_img,
 	            ff_frame->width, ff_frame->height)) {
