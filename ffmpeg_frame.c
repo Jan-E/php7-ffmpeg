@@ -289,7 +289,7 @@ _php_get_gd_image(zval *retval, int ww, int hh)
 
 	if (Z_TYPE(*retval) != IS_RESOURCE) {
 	    php_error_docref(NULL, E_ERROR,
-	            "Error creating GD Image, Z_TYPE(*retval) = %d: %s ( %d, %d ). Note: 8 = IS_OBJECT, see xend_types.h", Z_TYPE(*retval), "imagecreatetruecolor", ww, hh );
+	            "Error creating GD Image, Z_TYPE(*retval) = %d: %s ( %d, %d ). Note: 8 = IS_OBJECT, see zend_types.h", Z_TYPE(*retval), "imagecreatetruecolor", ww, hh );
 	}
 
 	Z_ADDREF_P(retval);
