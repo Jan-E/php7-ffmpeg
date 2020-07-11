@@ -60,15 +60,15 @@ if (PHP_FFMPEG != "no") {
 		var f;
 		if ( (f = check_for_main_ext("gd") ) &&
 			CHECK_HEADER_ADD_INCLUDE("gd.h", "CFLAGS_FFMPEG", f + "\\libgd") &&
-			CHECK_HEADER_ADD_INCLUDE("gd_io.h", "CFLAGS_FFMPEG", f + "\\libgd")
+			CHECK_HEADER_ADD_INCLUDE("gd_io.h", "CFLAGS_FFMPEG", f + "\\libgd") &&
+			CHECK_HEADER_ADD_INCLUDE("php_gd.h", "CFLAGS_FFMPEG", f)
 		) {
-			ADD_FLAG("CFLAGS_FFMPEG", '/I "' + f + '\\libgd" /D HAVE_LIBGD20=1');
+			ADD_FLAG("CFLAGS_FFMPEG", '/I "' + f + '" /I "' + f + '\\libgd" /D HAVE_LIBGD20=1');
 			if ((PHP_VERSION <= 7) && (PHP_MINOR_VERSION < 2)) {
 				ADD_EXTENSION_DEP("ffmpeg", "gd2", true);
 			}
 			if (PHP_VERSION > 7) {
-				var build_dir = get_define("BUILD_DIR");
-				ADD_FLAG("LDFLAGS_FFMPEG", ' php_gd2.lib /libpath:"' + build_dir + '"');
+				ADD_EXTENSION_DEP("ffmpeg", "gd", true);
 			}
 			STDOUT.WriteLine("ffmpeg-php gd support enabled; headers found at " + f + "\\libgd");
 		} else {
