@@ -60,6 +60,7 @@
 
 #if HAVE_LIBGD20
 
+#include <php_gd.h>
 #include <gd.h>
 
 #define FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, ret) { \
@@ -305,7 +306,7 @@ _php_get_gd_image(zval *retval, int ww, int hh)
 
 /* {{{ _php_avframe_to_gd_image()
 */
-static int _php_avframe_to_gd_image(AVFrame *frame, gdImage *dest, int width,
+static int _php_avframe_to_gd_image(AVFrame *frame, gdImagePtr dest, int width,
 	    int height)
 {
 	int x, y;
@@ -352,11 +353,7 @@ static int _php_gd_image_to_avframe(gdImage *src, AVFrame *frame, int width,
 FFMPEG_PHP_METHOD(ffmpeg_frame, toGDImage)
 {
 	ff_frame_context *ff_frame;
-#if PHP_MAJOR_VERSION < 8
 	gdImagePtr gd_img;
-#else
-	gdImage *gd_img;
-#endif
 
 	GET_FRAME_RESOURCE(getThis(), ff_frame);
 
