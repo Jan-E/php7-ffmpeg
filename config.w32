@@ -66,6 +66,10 @@ if (PHP_FFMPEG != "no") {
 			if ((PHP_VERSION <= 7) && (PHP_MINOR_VERSION < 2)) {
 				ADD_EXTENSION_DEP("ffmpeg", "gd2", true);
 			}
+			if (PHP_VERSION > 7) {
+				var build_dir = get_define("BUILD_DIR");
+				ADD_FLAG("LDFLAGS_FFMPEG", ' php_gd2.lib /libpath:"' + build_dir + '"');
+			}
 			STDOUT.WriteLine("ffmpeg-php gd support enabled; headers found at " + f + "\\libgd");
 		} else {
 			WARNING("ffmpeg-php gd support not enabled; headers not found at " + f);

@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: dab575a281eb79a8da8d3f0b5d4f7778b41126ff */
+ * Stub hash: ad9af7eb390f313800f6ceca1db1159ca402552f */
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_ffmpeg_movie___construct, 0, 0, 1)
 	ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)

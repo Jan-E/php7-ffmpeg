@@ -62,36 +62,6 @@
 
 #include <gd.h>
 
-#if PHP_MAJOR_VERSION >= 8
-
-// copied from https://github.com/php/php-src/blob/7ac9e9bf644ec9a305641386591a507a9159e5be/ext/gd/gd.c#L151-L154
-
-typedef struct _gd_ext_image_object {
-	gdImagePtr image;
-	zend_object std;
-} php_gd_image_object;
-
-// copied from https://github.com/php/php-src/blob/7ac9e9bf644ec9a305641386591a507a9159e5be/ext/gd/gd.c#L172-L184
-
-/**
- * Returns the underlying php_gd_image_object from a zend_object
- */
-static zend_always_inline php_gd_image_object* php_gd_exgdimage_from_zobj_p(zend_object* obj)
-{
-	return (php_gd_image_object *) ((char *) (obj) - XtOffsetOf(php_gd_image_object, std));
-}
-
-/**
- * Converts an extension GdImage instance contained within a zval into the gdImagePtr
- * for use with library APIs
- */
-static zend_always_inline gdImagePtr php_gd_libgdimageptr_from_zval_p(zval* zp)
-{
-	return php_gd_exgdimage_from_zobj_p(Z_OBJ_P(zp))->image;
-}
-
-#endif
-
 #define FFMPEG_PHP_FETCH_IMAGE_RESOURCE(gd_img, ret) { \
 	ZEND_GET_RESOURCE_TYPE_ID(le_gd, "gd"); \
 	if ((gd_img = (gdImagePtr)zend_fetch_resource(Z_RES_P(ret), "Image", le_gd)) == NULL) {\
