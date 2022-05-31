@@ -1906,6 +1906,17 @@ typedef struct AVFormatContext {
      * - decoding: set by user through AVOptions (NO direct access)
      */
     int max_streams;
+
+/* #if LIBAVFORMAT_VERSION_INT < (53<<16) */
+    char title[512];
+    char author[512];
+    char copyright[512];
+    char comment[512];
+    char album[512];
+    int year;  /**< ID3 year, 0 if none */
+    int track; /**< track number, 0 if none */
+    char genre[32]; /**< ID3 genre */
+/* #endif */
 } AVFormatContext;
 
 int av_format_get_probe_score(const AVFormatContext *s);
