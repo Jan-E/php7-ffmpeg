@@ -1024,13 +1024,13 @@ static const char* _php_get_codec_name(ff_movie_context *ffmovie_ctx, int type)
     /* Copied from libavcodec/utils.c::avcodec_string */
     if (p) {
         codec_name = p->name;
-        if (decoder_ctx->codec_id == CODEC_ID_MP3) {
+        if (decoder_ctx->codec_id == AV_CODEC_ID_MP3) {
             if (decoder_ctx->sub_id == 2)
                 codec_name = "mp2";
             else if (decoder_ctx->sub_id == 1)
                 codec_name = "mp1";
         }
-    } else if (decoder_ctx->codec_id == CODEC_ID_MPEG2TS) {
+    } else if (decoder_ctx->codec_id == AV_CODEC_ID_MPEG2TS) {
         /* fake mpeg2 transport stream codec (currently not registered) */
         codec_name = "mpeg2ts";
     } else if (decoder_ctx->codec_name[0] != '\0') {

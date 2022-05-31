@@ -3573,13 +3573,6 @@ typedef struct AVCodecContext {
      * - encoding: unused
      */
     int trailing_padding;
-
-    /**
-     * The maximum number of streams.
-     * - encoding: unused
-     * - decoding: set by user through AVOptions (NO direct access)
-     */
-    int MAX_STREAMS;
 } AVCodecContext;
 
 AVRational av_codec_get_pkt_timebase         (const AVCodecContext *avctx);
