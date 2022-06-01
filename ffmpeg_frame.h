@@ -74,7 +74,7 @@ ff_frame_context* _php_create_ffmpeg_frame(INTERNAL_FUNCTION_PARAMETERS);
 int _php_convert_frame(ff_frame_context *ff_frame, int new_fmt);
 
 #define GET_FRAME_RESOURCE(ffmpeg_frame_object, ffmpeg_frame) {\
-	zval **_tmp_zval;\
+    zval **_tmp_zval;\
     if (zend_hash_find(Z_OBJPROP_P(ffmpeg_frame_object), "ffmpeg_frame",\
                 sizeof("ffmpeg_frame"), (void **)&_tmp_zval) == FAILURE) {\
         zend_error(E_ERROR, "Unable to locate ffmpeg_frame resource in this object.");\

@@ -16,19 +16,19 @@ echo '
 
 .hor-minimalist-a
 {
-	font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
-	font-size: 12px;
-	background: #fff;
-	margin: 45px;
-	width: 480px;
-	border-collapse: collapse;
-	text-align: left;
+    font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
+    font-size: 12px;
+    background: #fff;
+    margin: 45px;
+    width: 480px;
+    border-collapse: collapse;
+    text-align: left;
 }
 
 
 .hor-minimalist-a caption { font-size: 16px; font-weight: bold; color: #039; padding: 10px 8px; }
 .hor-minimalist-a th { font-size: 14px; font-weight: normal; color: #039; padding: 10px 8px;
-	border-bottom: 2px solid #6678b1;
+    border-bottom: 2px solid #6678b1;
 }
 
 .hor-minimalist-a td { color: #669; padding: 9px 8px 0px 8px; }
@@ -89,10 +89,10 @@ foreach($movies as $movie) {
         printf("<tr><td>get pixel aspect ratio</td><td>%s<br/></td></tr>", $mov->getPixelAspectRatio());
         printf("<tr><td>get frame</td><td>%s<br/></td></tr>", is_object($mov->getFrame(10)) ? 'true' : 'false');
         printf("<tr><td>get frame number</td><td>%d<br/></td></tr>", $mov->getFrameNumber());
-	$thumbpath = "$i.png";
-	if (make_test_thumbnail(rand(1,100), $mov->getFilename(), $thumbpath)) {
-		printf('<tr><td>Random Thumbnail</td><td><img alt="Test Image" src="%s"/></td></tr>', $thumbpath);
-	}
+    $thumbpath = "$i.png";
+    if (make_test_thumbnail(rand(1,100), $mov->getFilename(), $thumbpath)) {
+    	printf('<tr><td>Random Thumbnail</td><td><img alt="Test Image" src="%s"/></td></tr>', $thumbpath);
+    }
     }
     
     echo "</table>";
@@ -103,45 +103,45 @@ foreach($movies as $movie) {
 echo '</div></body></html>';
 
 if (php_sapi_name() == 'cli') {
-	$content = ob_get_clean();
-	$content = br2nl($content);
-	$content = strip_tags($content);
-	echo $content;
+    $content = ob_get_clean();
+    $content = br2nl($content);
+    $content = strip_tags($content);
+    echo $content;
 } else {
-	ob_end_flush();
+    ob_end_flush();
 }
 
 function make_test_thumbnail($frame, $input, $outpath) {
 
-	$mov = new ffmpeg_movie($input);
-	$ff_frame = $mov->getFrame($frame);
-	if ($ff_frame) {
-		$gd_image = $ff_frame->toGDImage();
-		if ($gd_image) {
-			imagepng($gd_image, $outpath);
-			imagedestroy($gd_image);
-		} else {
-			return false;
-		}
-	} else {
-		return false;
-	}
-	return true;
+    $mov = new ffmpeg_movie($input);
+    $ff_frame = $mov->getFrame($frame);
+    if ($ff_frame) {
+    	$gd_image = $ff_frame->toGDImage();
+    	if ($gd_image) {
+    		imagepng($gd_image, $outpath);
+    		imagedestroy($gd_image);
+    	} else {
+    		return false;
+    	}
+    } else {
+    	return false;
+    }
+    return true;
 }
 
 
 function print_class_methods($class) {
-	$methods = get_class_methods($class);
-	echo '<table width="340" class="hor-minimalist-a">';
-	echo "<thead><tr><th>Methods available in class '$class'</th></tr></thead>";
-	if (is_array($methods)) {
-		foreach($methods as $method) {
-			echo "<tr><td>$method<br/></td></tr>";
-		}
-	} else {
-		echo "<tr><td>No Methods Defined<br/></td></tr>";
-	}
-	echo "</table>";
+    $methods = get_class_methods($class);
+    echo '<table width="340" class="hor-minimalist-a">';
+    echo "<thead><tr><th>Methods available in class '$class'</th></tr></thead>";
+    if (is_array($methods)) {
+    	foreach($methods as $method) {
+    		echo "<tr><td>$method<br/></td></tr>";
+    	}
+    } else {
+    	echo "<tr><td>No Methods Defined<br/></td></tr>";
+    }
+    echo "</table>";
 }
 
 function getDirFiles($dirPath)

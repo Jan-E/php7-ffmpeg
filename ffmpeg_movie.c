@@ -79,8 +79,8 @@
 
 #if LIBAVFORMAT_BUILD > 5770
 /* See libavcodec/avpicture.c */
-#define av_picture_copy(dst, src, fmt, width, height)	\
-	av_image_copy(dst->data, dst->linesize, (const uint8_t **)src->data,	\
+#define av_picture_copy(dst, src, fmt, width, height) \
+    av_image_copy(dst->data, dst->linesize, (const uint8_t **)src->data, \
                   src->linesize, fmt, width, height)
 #endif
 #if LIBAVFORMAT_BUILD > 4628
@@ -96,7 +96,7 @@ typedef struct {
     int64_t last_pts;
     int frame_number;
     long rsrc_id;
-    size_t	ncodec;
+    size_t ncodec;
     AVCodecContext **codec_ctx;
 } ff_movie_context;
 
@@ -110,26 +110,26 @@ static int le_ffmpeg_pmovie;
    List opened ffmpeg_movies */
 PHP_FUNCTION(ffmpeg_movie_list)
 {
-	ulong numitems, i;
-	zend_rsrc_list_entry *le;
+    ulong numitems, i;
+    zend_rsrc_list_entry *le;
     ff_movie_context *ffmovie_ctx;
 
-	if (zend_parse_parameters_none() == FAILURE) {
-		RETURN_FALSE;
-	}
+    if (zend_parse_parameters_none() == FAILURE) {
+        RETURN_FALSE;
+    }
 
-	array_init(return_value);
+    array_init(return_value);
 
-	numitems = zend_hash_next_free_element(&EG(regular_list));
-	for (i=1; i<numitems; i++) {
-		if (zend_hash_index_find(&EG(regular_list), i, (void **) &le)==FAILURE) {
-			continue;
-		}
-		if (Z_TYPE_P(le) == le_ffmpeg_movie || Z_TYPE_P(le) == le_ffmpeg_pmovie) {
-			ffmovie_ctx = (ff_movie_context *)(le->ptr);
-			add_index_string(return_value, i, ffmovie_ctx->fmt_ctx->filename, 1);
-		}
-	}
+    numitems = zend_hash_next_free_element(&EG(regular_list));
+    for (i=1; i<numitems; i++) {
+        if (zend_hash_index_find(&EG(regular_list), i, (void **) &le)==FAILURE) {
+            continue;
+        }
+        if (Z_TYPE_P(le) == le_ffmpeg_movie || Z_TYPE_P(le) == le_ffmpeg_pmovie) {
+            ffmovie_ctx = (ff_movie_context *)(le->ptr);
+            add_index_string(return_value, i, ffmovie_ctx->fmt_ctx->filename, 1);
+        }
+    }
 }
 /* }}} */
 
@@ -319,7 +319,6 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
     char *filename = NULL, *fullpath = NULL;
     zval ***argv;
     ff_movie_context *ffmovie_ctx = NULL;
-	int i;
 
     /* retrieve arguments */
     argv = (zval ***) safe_emalloc(sizeof(zval **), ZEND_NUM_ARGS(), 0);
@@ -329,7 +328,7 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
         php_error_docref(NULL TSRMLS_CC, E_ERROR,
                 "Error parsing arguments");
     }
- 
+
     switch (ZEND_NUM_ARGS()) {
         case 2:
             convert_to_boolean_ex(argv[1]);
@@ -454,7 +453,7 @@ static AVCodecContext* _php_get_decoder_context(ff_movie_context *ffmovie_ctx,
         int stream_type)
 {
     AVCodec *decoder;
-    int stream_index;
+    unsigned int stream_index;
 
     stream_index = _php_get_stream_index(ffmovie_ctx->fmt_ctx, stream_type);
     if (stream_index < 0) {
@@ -1024,14 +1023,14 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getVideoStreamId )
 
     stream_id= _php_get_stream_index(ffmovie_ctx->fmt_ctx, CODEC_TYPE_VIDEO);
 
-	if( stream_id == -1 )
-	{
-		RETURN_NULL();
-	}
-	else
-	{
-    	RETURN_LONG(stream_id);
-	}
+    if( stream_id == -1 )
+    {
+        RETURN_NULL();
+    }
+    else
+    {
+        RETURN_LONG(stream_id);
+    }
 }
 /* }}} */
 
@@ -1046,14 +1045,14 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getAudioStreamId )
 
     stream_id= _php_get_stream_index(ffmovie_ctx->fmt_ctx, CODEC_TYPE_AUDIO);
 
-	if( stream_id == -1 )
-	{
-		RETURN_NULL();
-	}
-	else
-	{
-    	RETURN_LONG(stream_id);
-	}
+    if( stream_id == -1 )
+    {
+        RETURN_NULL();
+    }
+    else
+    {
+        RETURN_LONG(stream_id);
+    }
 }
 /* }}} */
 
@@ -1442,14 +1441,14 @@ static double _php_get_sample_aspect_ratio(ff_movie_context *ffmovie_ctx)
     }
 
 
-	if (decoder_ctx->sample_aspect_ratio.num == 0) {
-		// pre read a frame so ffmpeg will fill in sample aspect ratio field.
+    if (decoder_ctx->sample_aspect_ratio.num == 0) {
+        // pre read a frame so ffmpeg will fill in sample aspect ratio field.
         _php_pre_read_frame(ffmovie_ctx);
 
-		if (decoder_ctx->sample_aspect_ratio.num == 0) {
-			return -2; // aspect not set
-		}
-	}
+        if (decoder_ctx->sample_aspect_ratio.num == 0) {
+            return -2; // aspect not set
+        }
+    }
 
     return av_q2d(decoder_ctx->sample_aspect_ratio);
 }

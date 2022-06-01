@@ -64,8 +64,8 @@ ZEND_END_ARG_INFO()
 /* {{{ ffmpeg_functions[]
  */
 const zend_function_entry ffmpeg_functions[] = {
-	PHP_FE(ffmpeg_movie_list, arginfo_ffmpeg_movie_list)
-	PHP_FE_END
+    PHP_FE(ffmpeg_movie_list, arginfo_ffmpeg_movie_list)
+    PHP_FE_END
 };
 /* }}} */
 
@@ -74,7 +74,7 @@ zend_module_entry ffmpeg_module_entry = {
     STANDARD_MODULE_HEADER,
 #endif
     "ffmpeg",
-	ffmpeg_functions,
+    ffmpeg_functions,
     PHP_MINIT(ffmpeg),
     PHP_MSHUTDOWN(ffmpeg),
     NULL,
@@ -119,14 +119,14 @@ PHP_MINIT_FUNCTION(ffmpeg)
     register_ffmpeg_frame_class(module_number);
 
     REGISTER_STRING_CONSTANT("FFMPEG_PHP_VERSION_STRING",
-		    FFMPEG_PHP_VERSION, CONST_CS | CONST_PERSISTENT);
+    	    FFMPEG_PHP_VERSION, CONST_CS | CONST_PERSISTENT);
     REGISTER_STRING_CONSTANT("FFMPEG_PHP_BUILD_DATE_STRING",
-		    __DATE__ " " __TIME__, CONST_CS | CONST_PERSISTENT);
+    	    __DATE__ " " __TIME__, CONST_CS | CONST_PERSISTENT);
     REGISTER_LONG_CONSTANT("LIBAVCODEC_VERSION_NUMBER",
-		    avcodec_version(), CONST_CS | CONST_PERSISTENT);
+    	    avcodec_version(), CONST_CS | CONST_PERSISTENT);
 #ifdef LIBAVCODEC_BUILD
     REGISTER_LONG_CONSTANT("LIBAVCODEC_BUILD_NUMBER",
-		    LIBAVCODEC_BUILD, CONST_CS | CONST_PERSISTENT);
+    	    LIBAVCODEC_BUILD, CONST_CS | CONST_PERSISTENT);
 #else
     REGISTER_LONG_CONSTANT("LIBAVCODEC_BUILD_NUMBER",
             avcodec_build(), CONST_CS | CONST_PERSISTENT);
