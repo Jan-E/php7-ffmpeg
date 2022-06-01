@@ -104,9 +104,6 @@ PHP_INI_END()
  */
 PHP_MINIT_FUNCTION(ffmpeg)
 {
-    /* must be called before using avcodec libraries. */
-    avcodec_init();
-
     /* register all codecs */
     av_register_all();
 

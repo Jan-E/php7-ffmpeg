@@ -38,7 +38,7 @@
 #include <avformat.h>
 
 #if LIBAVFORMAT_BUILD > 5770
-#include <libavutil/imgutils.h>
+#include <imgutils.h>
 #endif
 
 #ifndef CODEC_TYPE_VIDEO
@@ -324,17 +324,17 @@ static int _php_open_movie_file(ff_movie_context *ffmovie_ctx,
         char* filename)
 {
     if (ffmovie_ctx->fmt_ctx) {
-        av_close_input_file(ffmovie_ctx->fmt_ctx);
+        avformat_close_input(&ffmovie_ctx->fmt_ctx);
         ffmovie_ctx->fmt_ctx = NULL;
     }
 
     /* open the file with generic libav function */
-    if (av_open_input_file(&ffmovie_ctx->fmt_ctx, filename, NULL, 0, NULL) < 0) {
+    if (avformat_open_input(&ffmovie_ctx->fmt_ctx, filename, NULL, NULL) < 0) {
         return 1;
     }
 
     /* decode the first frames to get the stream parameters. */
-    av_find_stream_info(ffmovie_ctx->fmt_ctx);
+    avformat_find_stream_info(ffmovie_ctx->fmt_ctx, NULL);
 
     return 0;
 }
@@ -428,7 +428,7 @@ static void _php_free_ffmpeg_movie(zend_resource *rsrc)
         }
     }
 
-    av_close_input_file(ffmovie_ctx->fmt_ctx);
+    avformat_close_input(&ffmovie_ctx->fmt_ctx);
 
     efree(ffmovie_ctx);
 }
@@ -452,7 +452,7 @@ static void _php_free_ffmpeg_pmovie(zend_resource *rsrc)
         }
     }
 
-    av_close_input_file(ffmovie_ctx->fmt_ctx);
+    avformat_close_input(&ffmovie_ctx->fmt_ctx);
 
     free(ffmovie_ctx);
 }
@@ -540,7 +540,7 @@ static AVCodecContext* _php_get_decoder_context(ff_movie_context *ffmovie_ctx,
             GET_CODEC_PTR(ffmovie_ctx->fmt_ctx->streams[stream_index]->codec);
 
        /* open the decoder */
-        if (avcodec_open(ffmovie_ctx->codec_ctx[stream_index], decoder) < 0) {
+        if (avcodec_open2(ffmovie_ctx->codec_ctx[stream_index], decoder, NULL) < 0) {
             zend_error(E_WARNING, "Could not open codec for %s", _php_get_filename(ffmovie_ctx));
             return NULL;
         }
@@ -895,7 +895,7 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getPixelFormat)
     GET_MOVIE_RESOURCE(ffmovie_ctx);
 
     pix_fmt = _php_get_pixelformat(ffmovie_ctx);
-    fmt = avcodec_get_pix_fmt_name(pix_fmt);
+    fmt = av_get_pix_fmt_name(pix_fmt);
 
     if (fmt) {
         /* cast const to non-const to keep compiler from complaining,
@@ -1236,14 +1236,13 @@ static AVFrame* _php_read_av_frame(ff_movie_context *ffmovie_ctx,
         return NULL;
     }
 
-    frame = avcodec_alloc_frame();
+    frame = av_frame_alloc();
 
     /* read next frame */
     while (av_read_frame(ffmovie_ctx->fmt_ctx, &packet) >= 0) {
         if (packet.stream_index == video_stream) {
 
-            avcodec_decode_video(decoder_ctx, frame, &got_frame,
-                    packet.data, packet.size);
+            avcodec_decode_video2(decoder_ctx, frame, &got_frame, &packet);
 
             if (got_frame) {
                 *is_keyframe = (packet.flags & PKT_FLAG_KEY);
@@ -1366,7 +1365,6 @@ static int _php_get_ff_frame(ff_movie_context *ffmovie_ctx,
         ff_frame->keyframe = is_keyframe;
         ff_frame->pts = pts;
 
-        ff_frame->av_frame = avcodec_alloc_frame();
         avpicture_alloc((AVPicture*)ff_frame->av_frame, ff_frame->pixel_format,
             ff_frame->width, ff_frame->height);
 
