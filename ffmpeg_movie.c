@@ -373,9 +373,6 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
     if (fullpath) {
         efree(fullpath);
     }
-    if (hashkey) {
-        efree(hashkey);
-    }
 }
 /* }}} */
 
