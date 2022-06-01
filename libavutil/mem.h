@@ -203,7 +203,7 @@ void *av_mallocz(size_t size) av_malloc_attrib av_alloc_size(1);
  *         be allocated
  * @see av_malloc()
  */
-av_alloc_size(1, 2) static inline void *av_malloc_array(size_t nmemb, size_t size)
+av_alloc_size(1, 2) static __inline void *av_malloc_array(size_t nmemb, size_t size)
 {
     if (!size || nmemb >= INT_MAX / size)
         return NULL;
@@ -223,7 +223,7 @@ av_alloc_size(1, 2) static inline void *av_malloc_array(size_t nmemb, size_t siz
  * @see av_mallocz()
  * @see av_malloc_array()
  */
-av_alloc_size(1, 2) static inline void *av_mallocz_array(size_t nmemb, size_t size)
+av_alloc_size(1, 2) static __inline void *av_mallocz_array(size_t nmemb, size_t size)
 {
     if (!size || nmemb >= INT_MAX / size)
         return NULL;
@@ -662,7 +662,7 @@ void *av_dynarray2_add(void **tab_ptr, int *nb_ptr, size_t elem_size,
  * @param[out] r   Pointer to the result of the operation
  * @return 0 on success, AVERROR(EINVAL) on overflow
  */
-static inline int av_size_mult(size_t a, size_t b, size_t *r)
+static __inline int av_size_mult(size_t a, size_t b, size_t *r)
 {
     size_t t = a * b;
     /* Hack inspired from glibc: don't try the division if nelem and elsize
