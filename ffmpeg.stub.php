@@ -4,7 +4,7 @@
 
 /*
  usage example
- 
+
  $ffmpegInstance = new ffmpeg_movie($filename);
  $movie_width = $ffmpegInstance->getFrameWidth();
  $movie_height = $ffmpegInstance->getFrameHeight();

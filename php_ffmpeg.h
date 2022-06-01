@@ -93,7 +93,7 @@ PHP_FUNCTION(ffmpeg_movie_list);
 #define FFMPEG_G(v) (ffmpeg_globals.v)
 #endif
 
-#endif	/* PHP_FFMPEG_H */
+#endif    /* PHP_FFMPEG_H */
 
 
 /*

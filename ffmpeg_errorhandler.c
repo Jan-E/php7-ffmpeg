@@ -40,21 +40,21 @@
  */
 void ffmpeg_errorhandler(void *ptr, int level, const char *msg, va_list args)
 {
-	int php_level;
+    int php_level;
 
-	switch (level) {
-		case AV_LOG_ERROR:
-			php_level = E_WARNING;
-		break;
+    switch (level) {
+        case AV_LOG_ERROR:
+            php_level = E_WARNING;
+        break;
 
-		case AV_LOG_INFO:
-		case AV_LOG_DEBUG:
-		default:
-			php_level = E_NOTICE;
-		break;
-	}
+        case AV_LOG_INFO:
+        case AV_LOG_DEBUG:
+        default:
+            php_level = E_NOTICE;
+        break;
+    }
 
-	php_verror("", "", php_level, msg, args);
+    php_verror("", "", php_level, msg, args);
 }
 /* }}} */
 

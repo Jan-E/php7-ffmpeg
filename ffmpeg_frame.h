@@ -76,17 +76,17 @@ int _php_convert_frame(ff_frame_context *ff_frame, int new_fmt);
 #if PHP_VERSION_ID >= 70000
 #define GET_FRAME_RESOURCE(ffmpeg_frame_object, ffmpeg_frame) {\
     zend_resource *le;\
-	if ((le = zend_hash_str_find_ptr(Z_OBJPROP_P(ffmpeg_frame_object), "ffmpeg_frame", sizeof("ffmpeg_frame")-1)) == NULL) {\
+    if ((le = zend_hash_str_find_ptr(Z_OBJPROP_P(ffmpeg_frame_object), "ffmpeg_frame", sizeof("ffmpeg_frame")-1)) == NULL) {\
         zend_error(E_WARNING, "Invalid ffmpeg_frame object");\
         RETURN_FALSE;\
-	} else {\
-		ffmpeg_frame = (ff_frame_context *)(le->ptr);\
+    } else {\
+        ffmpeg_frame = (ff_frame_context *)(le->ptr);\
     }\
 \
 }
 #else
 #define GET_FRAME_RESOURCE(ffmpeg_frame_object, ffmpeg_frame) {\
-	zval **_tmp_zval;\
+    zval **_tmp_zval;\
     if (zend_hash_find(Z_OBJPROP_P(ffmpeg_frame_object), "ffmpeg_frame",\
                 sizeof("ffmpeg_frame"), (void **)&_tmp_zval) == FAILURE) {\
         zend_error(E_ERROR, "Unable to locate ffmpeg_frame resource in this object.");\

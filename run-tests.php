@@ -904,7 +904,7 @@ if ($html_output) {
 }
 
 save_or_mail_results();
- 
+
 if (getenv('REPORT_EXIT_STATUS') == 1 and $sum_results['FAILED']) {
 	exit(1);
 }
@@ -944,7 +944,7 @@ function mail_qa_team($data, $compression, $status = false)
 	fclose($fs);
 
 	return 1;
-} 
+}
 
 
 //
@@ -968,7 +968,7 @@ function save_text($filename, $text, $filename_copy = null)
 	if (1 < $DETAILED) echo "
 FILE $filename {{{
 $text
-}}} 
+}}}
 ";
 }
 
@@ -976,7 +976,7 @@ $text
 //  Write an error in a format recognizable to Emacs or MSVC.
 //
 
-function error_report($testname, $logname, $tested) 
+function error_report($testname, $logname, $tested)
 {
 	$testname = realpath($testname);
 	$logname  = realpath($logname);
@@ -2307,12 +2307,12 @@ function show_result($result, $tested, $tested_file, $extra = '', $temp_filename
 			$mem = "&nbsp;";
 		}
 
-		fwrite($html_file, 
+		fwrite($html_file,
 			"<tr>" .
 			"<td>$result</td>" .
 			"<td>$tested</td>" .
 			"<td>$extra</td>" .
-			"<td>$diff</td>" . 
+			"<td>$diff</td>" .
 			"<td>$mem</td>" .
 			"</tr>\n");
 	}

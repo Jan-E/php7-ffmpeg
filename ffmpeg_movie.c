@@ -65,11 +65,11 @@
 
 #define GET_MOVIE_RESOURCE(ffmovie_ctx) {\
     zend_resource *le;\
-	if ((le = zend_hash_str_find_ptr(Z_OBJPROP_P(getThis()), "ffmpeg_movie", sizeof("ffmpeg_movie")-1)) == NULL) {\
+    if ((le = zend_hash_str_find_ptr(Z_OBJPROP_P(getThis()), "ffmpeg_movie", sizeof("ffmpeg_movie")-1)) == NULL) {\
         zend_error(E_WARNING, "Invalid ffmpeg_movie object");\
         RETURN_FALSE;\
-	} else {\
-		ffmovie_ctx = (ff_movie_context *)(le->ptr);\
+    } else {\
+        ffmovie_ctx = (ff_movie_context *)(le->ptr);\
     }\
 \
 }
@@ -77,8 +77,8 @@
 
 #if LIBAVFORMAT_BUILD > 5770
 /* See libavcodec/avpicture.c */
-#define av_picture_copy(dst, src, fmt, width, height)	\
-	av_image_copy(dst->data, dst->linesize, (const uint8_t **)src->data,	\
+#define av_picture_copy(dst, src, fmt, width, height)    \
+    av_image_copy(dst->data, dst->linesize, (const uint8_t **)src->data,    \
                   src->linesize, fmt, width, height)
 #endif
 #if LIBAVFORMAT_BUILD > 4628
@@ -94,7 +94,7 @@ typedef struct {
     int64_t last_pts;
     int frame_number;
     zend_resource *rsrc_id;
-    size_t	ncodec;
+    size_t    ncodec;
     AVCodecContext **codec_ctx;
 } ff_movie_context;
 
@@ -190,21 +190,21 @@ zend_function_entry ffmpeg_movie_class_methods[] = {
  */
 static ff_movie_context* _php_get_ffmovie_ctx()
 {
-	zend_ulong numitems, i;
-	zend_resource *le;
+    zend_ulong numitems, i;
+    zend_resource *le;
     ff_movie_context *ffmovie_ctx;
 
-	numitems = zend_hash_next_free_element(&EG(regular_list));
-	for (i=1; i<numitems; i++) {
-		if ((le = zend_hash_index_find_ptr(&EG(regular_list), i)) == NULL) {
-			continue;
-		}
-		if (le->type == le_ffmpeg_movie || le->type == le_ffmpeg_pmovie) {
-			ffmovie_ctx = (ff_movie_context *)(le->ptr);
-			return ffmovie_ctx;
-		}
-	}
-	return 0;
+    numitems = zend_hash_next_free_element(&EG(regular_list));
+    for (i=1; i<numitems; i++) {
+        if ((le = zend_hash_index_find_ptr(&EG(regular_list), i)) == NULL) {
+            continue;
+        }
+        if (le->type == le_ffmpeg_movie || le->type == le_ffmpeg_pmovie) {
+            ffmovie_ctx = (ff_movie_context *)(le->ptr);
+            return ffmovie_ctx;
+        }
+    }
+    return 0;
 }
 /* }}} */
 
@@ -213,7 +213,7 @@ static ff_movie_context* _php_get_ffmovie_ctx()
 static int _php_get_stream_index(const AVFormatContext *fmt_ctx, int type)
 {
     int i;
-	//fprintf(stderr, "_php_get_stream_index fmt_ctx->nb_streams = %d\n", fmt_ctx->nb_streams);
+    //fprintf(stderr, "_php_get_stream_index fmt_ctx->nb_streams = %d\n", fmt_ctx->nb_streams);
 
     for (i = 0; i < fmt_ctx->nb_streams; i++) {
         if (fmt_ctx->streams[i] &&
@@ -346,32 +346,32 @@ static int _php_open_movie_file(ff_movie_context *ffmovie_ctx,
  */
 FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
 {
-	zval *argv = NULL;
-	int ac = ZEND_NUM_ARGS();
+    zval *argv = NULL;
+    int ac = ZEND_NUM_ARGS();
     int persistent = 0;
     char *filename = NULL, *fullpath = NULL;
     ff_movie_context *ffmovie_ctx = NULL;
-	int i;
+    int i;
 
-	/* we pass additional args to the respective handler */
-	argv = (zval *)safe_emalloc(sizeof(zval), ac, 0);
-	if (zend_get_parameters_array_ex(ac, argv) != SUCCESS) {
-		efree(argv);
-		WRONG_PARAM_COUNT;
-	}
+    /* we pass additional args to the respective handler */
+    argv = (zval *)safe_emalloc(sizeof(zval), ac, 0);
+    if (zend_get_parameters_array_ex(ac, argv) != SUCCESS) {
+        efree(argv);
+        WRONG_PARAM_COUNT;
+    }
 
-	/* we only take string arguments */
-	for (i = 0; i < ac; i++) {
-		if (Z_TYPE(argv[i]) != IS_STRING) {
-			convert_to_string_ex(&argv[i]);
-		} else if (Z_REFCOUNTED(argv[i])) {
-			Z_ADDREF(argv[i]);
-		}
-	}
+    /* we only take string arguments */
+    for (i = 0; i < ac; i++) {
+        if (Z_TYPE(argv[i]) != IS_STRING) {
+            convert_to_string_ex(&argv[i]);
+        } else if (Z_REFCOUNTED(argv[i])) {
+            Z_ADDREF(argv[i]);
+        }
+    }
 
     switch (ZEND_NUM_ARGS()) {
         case 2:
-//			convert_to_boolean_ex(argv[1]);
+//            convert_to_boolean_ex(argv[1]);
 
             if (! INI_BOOL("ffmpeg.allow_persistent") && Z_STRVAL(argv[1])) {
                 zend_error(E_WARNING,
@@ -401,7 +401,7 @@ FFMPEG_PHP_CONSTRUCTOR(ffmpeg_movie, __construct)
 
         ffmovie_ctx->rsrc_id = zend_register_resource(ffmovie_ctx,
                 le_ffmpeg_movie);
-//	    }
+//        }
 
     add_property_resource(getThis(), "ffmpeg_movie", ffmovie_ctx->rsrc_id);
 
@@ -1058,14 +1058,14 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getVideoStreamId )
 
     stream_id= _php_get_stream_index(ffmovie_ctx->fmt_ctx, CODEC_TYPE_VIDEO);
 
-	if( stream_id == -1 )
-	{
-		RETURN_NULL();
-	}
-	else
-	{
-    	RETURN_LONG(stream_id);
-	}
+    if( stream_id == -1 )
+    {
+        RETURN_NULL();
+    }
+    else
+    {
+        RETURN_LONG(stream_id);
+    }
 }
 /* }}} */
 
@@ -1080,14 +1080,14 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getAudioStreamId )
 
     stream_id= _php_get_stream_index(ffmovie_ctx->fmt_ctx, CODEC_TYPE_AUDIO);
 
-	if( stream_id == -1 )
-	{
-		RETURN_NULL();
-	}
-	else
-	{
-    	RETURN_LONG(stream_id);
-	}
+    if( stream_id == -1 )
+    {
+        RETURN_NULL();
+    }
+    else
+    {
+        RETURN_LONG(stream_id);
+    }
 }
 /* }}} */
 
@@ -1410,10 +1410,10 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getNextKeyFrame)
  */
 FFMPEG_PHP_METHOD(ffmpeg_movie, getFrame)
 {
-	zval *argv = NULL;
+    zval *argv = NULL;
     int wanted_frame = 0;
     ff_movie_context *ffmovie_ctx;
-	int ac = ZEND_NUM_ARGS();
+    int ac = ZEND_NUM_ARGS();
 
     if (ZEND_NUM_ARGS() > 1) {
         WRONG_PARAM_COUNT;
@@ -1423,13 +1423,13 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getFrame)
 
     if (ZEND_NUM_ARGS()) {
         /* retrieve arguments */
-		argv = (zval *)safe_emalloc(sizeof(zval), ac, 0);
-		if (zend_get_parameters_array_ex(ac, argv) != SUCCESS) {
-			efree(argv);
-			WRONG_PARAM_COUNT;
-		}
+        argv = (zval *)safe_emalloc(sizeof(zval), ac, 0);
+        if (zend_get_parameters_array_ex(ac, argv) != SUCCESS) {
+            efree(argv);
+            WRONG_PARAM_COUNT;
+        }
 
-		convert_to_long_ex(&argv[0]);
+        convert_to_long_ex(&argv[0]);
         wanted_frame = Z_LVAL(argv[0]);
 
         /* bounds check wanted frame */
@@ -1477,14 +1477,14 @@ static double _php_get_sample_aspect_ratio(ff_movie_context *ffmovie_ctx)
     }
 
 
-	if (decoder_ctx->sample_aspect_ratio.num == 0) {
-		// pre read a frame so ffmpeg will fill in sample aspect ratio field.
+    if (decoder_ctx->sample_aspect_ratio.num == 0) {
+        // pre read a frame so ffmpeg will fill in sample aspect ratio field.
         _php_pre_read_frame(ffmovie_ctx);
 
-		if (decoder_ctx->sample_aspect_ratio.num == 0) {
-			return -2; // aspect not set
-		}
-	}
+        if (decoder_ctx->sample_aspect_ratio.num == 0) {
+            return -2; // aspect not set
+        }
+    }
 
     return (double)av_q2d(decoder_ctx->sample_aspect_ratio);
 }
@@ -1515,36 +1515,36 @@ FFMPEG_PHP_METHOD(ffmpeg_movie, getPixelAspectRatio)
    List opened ffmpeg_movies */
 PHP_FUNCTION(ffmpeg_movie_list)
 {
-	zend_ulong numitems, i;
-	zend_resource *le;
+    zend_ulong numitems, i;
+    zend_resource *le;
     ff_movie_context *ffmovie_ctx;
 
-	if (zend_parse_parameters_none() == FAILURE) {
-		RETURN_FALSE;
-	}
+    if (zend_parse_parameters_none() == FAILURE) {
+        RETURN_FALSE;
+    }
 
-	array_init(return_value);
+    array_init(return_value);
 
-	numitems = zend_hash_next_free_element(&EG(regular_list));
-	for (i=1; i<numitems; i++) {
-		if ((le = zend_hash_index_find_ptr(&EG(regular_list), i)) == NULL) {
-			continue;
-		}
-		if (le->type == le_ffmpeg_movie) {
-			ffmovie_ctx = (ff_movie_context *)(le->ptr);
-			add_index_long(return_value, i, (zend_long)le->ptr);
-			add_index_long(return_value, 10*i, (zend_long)le->type);
-			add_index_string(return_value, 100*i, "le_ffmpeg_movie");
-			add_index_string(return_value, 1000*i, ffmovie_ctx->fmt_ctx->filename);
-		}
-		if (le->type == le_ffmpeg_pmovie) {
-			ffmovie_ctx = (ff_movie_context *)(le->ptr);
-			add_index_long(return_value, i, (zend_long)le->ptr);
-			add_index_long(return_value, 10*i, (zend_long)le->type);
-			add_index_string(return_value, 100*i, "le_ffmpeg_pmovie");
-			add_index_string(return_value, 1000*i, ffmovie_ctx->fmt_ctx->filename);
-		}
-	}
+    numitems = zend_hash_next_free_element(&EG(regular_list));
+    for (i=1; i<numitems; i++) {
+        if ((le = zend_hash_index_find_ptr(&EG(regular_list), i)) == NULL) {
+            continue;
+        }
+        if (le->type == le_ffmpeg_movie) {
+            ffmovie_ctx = (ff_movie_context *)(le->ptr);
+            add_index_long(return_value, i, (zend_long)le->ptr);
+            add_index_long(return_value, 10*i, (zend_long)le->type);
+            add_index_string(return_value, 100*i, "le_ffmpeg_movie");
+            add_index_string(return_value, 1000*i, ffmovie_ctx->fmt_ctx->filename);
+        }
+        if (le->type == le_ffmpeg_pmovie) {
+            ffmovie_ctx = (ff_movie_context *)(le->ptr);
+            add_index_long(return_value, i, (zend_long)le->ptr);
+            add_index_long(return_value, 10*i, (zend_long)le->type);
+            add_index_string(return_value, 100*i, "le_ffmpeg_pmovie");
+            add_index_string(return_value, 1000*i, ffmovie_ctx->fmt_ctx->filename);
+        }
+    }
 }
 /* }}} */
 

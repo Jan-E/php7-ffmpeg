@@ -3,8 +3,8 @@
  * This test script is not part of the automatic regression tests. It serves
  * as a simple manual test script and an example of the syntax for calling
  * the ffmpeg-php functions
- * 
- * To run it from the command line type 'php -q ffmpeg_test.php ' or from a 
+ *
+ * To run it from the command line type 'php -q ffmpeg_test.php ' or from a
  * browser copy this file into your web root and point your browser at it.
  */
 
@@ -29,11 +29,11 @@ printf("libavcodec version number: %d\n", LIBAVCODEC_VERSION_NUMBER);
 print_class_methods("ffmpeg_movie");
 print_class_methods("ffmpeg_frame");
 
-// get an array for movies from the test media directory 
+// get an array for movies from the test media directory
 $movies = getDirFiles(dirname(__FILE__) . '/tests/test_media');
 
 echo "--------------------\n\n";
-foreach($movies as $movie) {        
+foreach($movies as $movie) {
     $mov = new ffmpeg_movie($movie);
     printf("file name = %s\n", $mov->getFileName());
     printf("duration = %s seconds\n", $mov->getDuration());
@@ -97,9 +97,9 @@ function getDirFiles($dirPath)
                 $filesArr[] = trim($fullpath);
         }
         closedir($handle);
-    } 
+    }
 
-    return $filesArr;   
+    return $filesArr;
 }
 
 
