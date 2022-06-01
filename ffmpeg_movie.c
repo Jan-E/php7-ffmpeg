@@ -1342,6 +1342,7 @@ static int _php_get_ff_frame(ff_movie_context *ffmovie_ctx,
     int is_keyframe = 0;
     int64_t pts;
     AVFrame *frame = NULL;
+
     ff_frame_context *ff_frame;
 
     frame = _php_get_av_frame(ffmovie_ctx, wanted_frame, &is_keyframe, &pts);
@@ -1365,6 +1366,7 @@ static int _php_get_ff_frame(ff_movie_context *ffmovie_ctx,
         ff_frame->keyframe = is_keyframe;
         ff_frame->pts = pts;
 
+        ff_frame->av_frame = av_frame_alloc();
         avpicture_alloc((AVPicture*)ff_frame->av_frame, ff_frame->pixel_format,
             ff_frame->width, ff_frame->height);
 
