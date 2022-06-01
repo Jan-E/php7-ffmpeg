@@ -180,6 +180,8 @@ PHP_MINFO_FUNCTION(ffmpeg)
 
     DISPLAY_INI_ENTRIES();
 }
+/* }}} */
+
 
 /*
  * Local variables:
