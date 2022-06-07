@@ -55,7 +55,6 @@ if (PHP_FFMPEG != "no") {
     	ADD_FLAG("CFLAGS_FFMPEG", " \
     	/D HAVE_SWSCALER=1 \
     	/D HAVE_FFMPEG_PHP=1 \
-    	/D MAX_STREAMS=1 \
     	");
     	
     	var f;
