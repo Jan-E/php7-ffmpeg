@@ -419,8 +419,11 @@ static void _php_free_ffmpeg_movie(zend_resource *rsrc)
     int i;
     ff_movie_context *ffmovie_ctx = (ff_movie_context*)rsrc->ptr;
 
+    if (ffmovie_ctx == NULL)
+        return;
+
     if (ffmovie_ctx->codec_ctx) {
-        for (i = 0; i < MAX_STREAMS; i++) {
+        for (i = 0; i < ffmovie_ctx->ncodec; i++) {
             if (ffmovie_ctx->codec_ctx[i]) {
                 avcodec_close(ffmovie_ctx->codec_ctx[i]);
             }
@@ -430,6 +433,7 @@ static void _php_free_ffmpeg_movie(zend_resource *rsrc)
 
     avformat_close_input(&ffmovie_ctx->fmt_ctx);
 
+    efree(ffmovie_ctx->fmt_ctx);
     efree(ffmovie_ctx);
 }
 /* }}} */
@@ -443,8 +447,11 @@ static void _php_free_ffmpeg_pmovie(zend_resource *rsrc)
     int i;
     ff_movie_context *ffmovie_ctx = (ff_movie_context*)rsrc->ptr;
 
+    if (ffmovie_ctx == NULL)
+        return;
+
     if (ffmovie_ctx->codec_ctx) {
-        for (i = 0; i < MAX_STREAMS; i++) {
+        for (i = 0; i < ffmovie_ctx->ncodec; i++) {
             if (ffmovie_ctx->codec_ctx[i]) {
                 avcodec_close(ffmovie_ctx->codec_ctx[i]);
             }
@@ -454,6 +461,7 @@ static void _php_free_ffmpeg_pmovie(zend_resource *rsrc)
 
     avformat_close_input(&ffmovie_ctx->fmt_ctx);
 
+    efree(ffmovie_ctx->fmt_ctx);
     free(ffmovie_ctx);
 }
 /* }}} */
