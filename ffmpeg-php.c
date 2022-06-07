@@ -115,6 +115,8 @@ PHP_MINIT_FUNCTION(ffmpeg)
         av_log_set_callback(ffmpeg_hide_errors);
     }
 
+    avformat_network_init();
+
     register_ffmpeg_movie_class(module_number);
     register_ffmpeg_frame_class(module_number);
 
@@ -147,6 +149,8 @@ PHP_MINIT_FUNCTION(ffmpeg)
  */
 PHP_MSHUTDOWN_FUNCTION(ffmpeg)
 {
+    avformat_network_deinit();
+
     // TODO: Free any remaining persistent movies here?
 
     UNREGISTER_INI_ENTRIES();
