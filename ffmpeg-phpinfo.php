@@ -1,6 +1,6 @@
 <?
 /*
- * browser * copy this file and the tests directory into your web root and point 
+ * browser * copy this file and the tests directory into your web root and point
  * your browser at it.
  */
 
@@ -51,11 +51,11 @@ print_class_methods("ffmpeg_movie");
 echo "<p/>";
 print_class_methods("ffmpeg_frame");
 
-// get an array for movies from the test media directory 
+// get an array for movies from the test media directory
 $movies = getDirFiles(dirname(__FILE__) . '/tests/test_media');
 
 $i = 1;
-foreach($movies as $movie) {        
+foreach($movies as $movie) {
     $mov = new ffmpeg_movie($movie);
 
     echo '<table width="90%" class="hor-minimalist-a">';
@@ -94,7 +94,7 @@ foreach($movies as $movie) {
 		printf('<tr><td>Random Thumbnail</td><td><img alt="Test Image" src="%s"/></td></tr>', $thumbpath);
 	}
     }
-    
+
     echo "</table>";
     echo "<p/><p/>";
     $i++;
@@ -154,9 +154,9 @@ function getDirFiles($dirPath)
                 $filesArr[] = trim($fullpath);
         }
         closedir($handle);
-    } 
+    }
 
-    return $filesArr;   
+    return $filesArr;
 }
 
 function br2nl($string) {

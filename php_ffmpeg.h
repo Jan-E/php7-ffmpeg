@@ -37,6 +37,9 @@
 #define PHP_FFMPEG_H
 
 #include "php_version.h"
+#if PHP_MAJOR_VERSION >= 8
+#include "ffmpeg_arginfo.h"
+#endif
 
 /*
  * PHP-4 doesn't have the METHOD, ME and MALIAS macros so map them back
@@ -90,7 +93,7 @@ PHP_FUNCTION(ffmpeg_movie_list);
 #define FFMPEG_G(v) (ffmpeg_globals.v)
 #endif
 
-#endif	/* PHP_FFMPEG_H */
+#endif    /* PHP_FFMPEG_H */
 
 
 /*
