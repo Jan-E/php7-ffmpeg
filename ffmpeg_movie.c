@@ -1090,12 +1090,14 @@ static const char* _php_get_codec_name(ff_movie_context *ffmovie_ctx, int type)
     /* Copied from libavcodec/utils.c::avcodec_string */
     if (p) {
         codec_name = p->name;
-        if (decoder_ctx->codec_id == AV_CODEC_ID_MP3) {
+#ifdef FF_API_SUB_ID
+        if (decoder_ctx->codec_id == CODEC_ID_MP3) {
             if (decoder_ctx->sub_id == 2)
                 codec_name = "mp2";
             else if (decoder_ctx->sub_id == 1)
                 codec_name = "mp1";
         }
+#endif
     } else if (decoder_ctx->codec_id == AV_CODEC_ID_MPEG2TS) {
         /* fake mpeg2 transport stream codec (currently not registered) */
         codec_name = "mpeg2ts";
@@ -1421,9 +1423,17 @@ static AVFrame* _php_get_av_frame(ff_movie_context *ffmovie_ctx,
                 wanted_frame != GETFRAME_NEXTFRAME &&
                 wanted_frame - ffmovie_ctx->frame_number >
                 decoder_ctx->gop_size + 1) {
+#if LIBAVFORMAT_VERSION_INT > AV_VERSION_INT(52, 31, 0)
+            decoder_ctx->skip_frame = AVDISCARD_NONREF;
+#else
             decoder_ctx->hurry_up = 1;
+#endif
         } else {
+#if LIBAVFORMAT_VERSION_INT > AV_VERSION_INT(52, 31, 0)
+            decoder_ctx->skip_frame = AVDISCARD_DEFAULT;
+#else
             decoder_ctx->hurry_up = 0;
+#endif
         }
         ffmovie_ctx->frame_number++;
 
