@@ -3574,23 +3574,6 @@ typedef struct AVCodecContext {
      */
     int trailing_padding;
 
-    /**
-     * Some codecs need additional format info. It is stored here.
-     * If any muxer uses this then ALL demuxers/parsers AND encoders for the
-     * specific codec MUST set it correctly otherwise stream copy breaks.
-     * In general use of this field by muxers is not recommanded.
-     * - encoding: Set by libavcodec.
-     * - decoding: Set by libavcodec. (FIXME: Is this OK?)
-     */
-    int sub_id;
-
-    /**
-     * hurry up amount
-     * - encoding: unused
-     * - decoding: Set by user. 1-> Skip B-frames, 2-> Skip IDCT/dequant too, 5-> Skip everything except header
-     * @deprecated Deprecated in favor of skip_idct and skip_frame.
-     */
-    int hurry_up;
 } AVCodecContext;
 
 AVRational av_codec_get_pkt_timebase         (const AVCodecContext *avctx);
