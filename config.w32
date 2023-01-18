@@ -25,12 +25,12 @@ function check_for_main_ext(ext, header)
 if (PHP_FFMPEG != "no") {
     if (
             // put the libs in deps\lib or win64build\lib and win32build\lib
-            CHECK_LIB("avcodec-59.lib;avcodec-57.lib", "ffmpeg", PHP_FFMPEG) &&
-            CHECK_LIB("avdevice-59.lib;avdevice-57.lib", "ffmpeg", PHP_FFMPEG) &&
-            CHECK_LIB("avformat-59.lib;avformat-57.lib", "ffmpeg", PHP_FFMPEG) &&
-            CHECK_LIB("avutil-57.lib;avutil-55.lib", "ffmpeg", PHP_FFMPEG) &&
+            CHECK_LIB("avcodec-59;avcodec-58.lib;avcodec-57.lib", "ffmpeg", PHP_FFMPEG) &&
+            CHECK_LIB("avdevice-59.lib;avdevice-58.lib;avdevice-57.lib", "ffmpeg", PHP_FFMPEG) &&
+            CHECK_LIB("avformat-59.lib;avformat-58.lib;avformat-57.lib", "ffmpeg", PHP_FFMPEG) &&
+            CHECK_LIB("avutil-57.lib;avutil-56.lib;avutil-55.lib", "ffmpeg", PHP_FFMPEG) &&
 //            CHECK_LIB("avfilter-6.lib", "ffmpeg", PHP_FFMPEG) &&                                                        // ffmpeg 0.7
-            CHECK_LIB("swscale-6.lib;swscale-4.lib", "ffmpeg", PHP_FFMPEG) &&
+            CHECK_LIB("swscale-6.lib;swscale-5.lib;swscale-4.lib", "ffmpeg", PHP_FFMPEG) &&
             CHECK_HEADER_ADD_INCLUDE("inttypes.h", "CFLAGS_FFMPEG", PHP_FFMPEG + ";ext\\ffmpeg\\msvc") &&
             CHECK_HEADER_ADD_INCLUDE("stdint.h", "CFLAGS_FFMPEG", PHP_FFMPEG + ";ext\\ffmpeg\\msvc") &&
             CHECK_HEADER_ADD_INCLUDE("avcodec.h", "CFLAGS_FFMPEG", PHP_FFMPEG + ";ext\\ffmpeg\\libavcodec") &&
