@@ -52,8 +52,9 @@
 
 #include "php_ffmpeg.h"
 #include "ffmpeg_errorhandler.h"
+#include "ffversion.h"
 
-#define FFMPEG_PHP_VERSION "3.2.18"
+#define FFMPEG_PHP_VERSION FFMPEG_VERSION
 
 /* {{{ arginfo */
 ZEND_BEGIN_ARG_INFO(arginfo_ffmpeg_movie_list, 0)
