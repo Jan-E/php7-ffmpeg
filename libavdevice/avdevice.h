@@ -37,7 +37,7 @@
  * (de)muxers in libavdevice are of the AVFMT_NOFILE type (they use their own
  * I/O functions). The filename passed to avformat_open_input() often does not
  * refer to an actually existing file, but has some special device-specific
- * meaning - e.g. for x11grab it is the display name.
+ * meaning - e.g. for xcbgrab it is the display name.
  *
  * To use libavdevice, simply call avdevice_register_all() to register all
  * compiled muxers and demuxers. They all use standard libavformat API.
@@ -67,7 +67,6 @@ const char *avdevice_license(void);
 
 /**
  * Initialize libavdevice and register all the input and output devices.
- * @warning This function is not thread safe.
  */
 void avdevice_register_all(void);
 
@@ -322,6 +321,7 @@ int avdevice_dev_to_app_control_message(struct AVFormatContext *s,
                                         enum AVDevToAppMessageType type,
                                         void *data, size_t data_size);
 
+#if FF_API_DEVICE_CAPABILITIES
 /**
  * Following API allows user to probe device capabilities (supported codecs,
  * pixel formats, sample formats, resolutions, channel counts, etc).
@@ -417,6 +417,7 @@ typedef struct AVDeviceCapabilitiesQuery {
 /**
  * AVOption table used by devices to implement device capabilities API. Should not be used by a user.
  */
+attribute_deprecated
 extern const AVOption av_device_capabilities[];
 
 /**
@@ -436,6 +437,7 @@ extern const AVOption av_device_capabilities[];
  *
  * @return >= 0 on success, negative otherwise.
  */
+attribute_deprecated
 int avdevice_capabilities_create(AVDeviceCapabilitiesQuery **caps, AVFormatContext *s,
                                  AVDictionary **device_options);
 
@@ -445,7 +447,9 @@ int avdevice_capabilities_create(AVDeviceCapabilitiesQuery **caps, AVFormatConte
  * @param caps Device capabilities data to be freed.
  * @param s    Context of the device.
  */
+attribute_deprecated
 void avdevice_capabilities_free(AVDeviceCapabilitiesQuery **caps, AVFormatContext *s);
+#endif
 
 /**
  * Structure describes basic parameters of the device.

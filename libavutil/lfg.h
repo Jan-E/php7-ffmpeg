@@ -22,12 +22,27 @@
 #ifndef AVUTIL_LFG_H
 #define AVUTIL_LFG_H
 
+#include <stdint.h>
+
+/**
+ * Context structure for the Lagged Fibonacci PRNG.
+ * The exact layout, types and content of this struct may change and should
+ * not be accessed directly. Only its sizeof() is guranteed to stay the same
+ * to allow easy instanciation.
+ */
 typedef struct AVLFG {
     unsigned int state[64];
     int index;
 } AVLFG;
 
 void av_lfg_init(AVLFG *c, unsigned int seed);
+
+/**
+ * Seed the state of the ALFG using binary data.
+ *
+ * Return value: 0 on success, negative value (AVERROR) on failure.
+ */
+int av_lfg_init_from_data(AVLFG *c, const uint8_t *data, unsigned int length);
 
 /**
  * Get the next random unsigned 32-bit number using an ALFG.
