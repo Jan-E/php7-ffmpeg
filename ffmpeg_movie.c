@@ -1101,8 +1101,6 @@ static const char* _php_get_codec_name(ff_movie_context *ffmovie_ctx, int type)
     } else if (decoder_ctx->codec_id == AV_CODEC_ID_MPEG2TS) {
         /* fake mpeg2 transport stream codec (currently not registered) */
         codec_name = "mpeg2ts";
-    } else if (decoder_ctx->codec_name[0] != '\0') {
-        codec_name = decoder_ctx->codec_name;
     } else {
         /* output avi tags */
         if (decoder_ctx->codec_type == CODEC_TYPE_VIDEO) {
